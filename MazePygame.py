@@ -40,7 +40,11 @@ def wallDrawer():
                         topLeft = (boxW*col, boxH*row)
                         endPos = (topLeft[0] + (boxW+borderW)*(dir[0]), topLeft[1] + (boxH+borderW)*(dir[1]))
                     pygame.draw.line(screen, pygame.Color(100, 0, 0), topLeft, endPos, width=borderW)
-TickMouseThing=0
+stateSquare = [["Unclicked" for x in range(rows)] for y in range(cols)]
+ticker=0
+LastClick = 0
+curTime =0
+click=False
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -49,32 +53,54 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             click = True
-        else:
+        if event.type == pygame.MOUSEBUTTONUP:
             click = False
-
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_q]:
+            running = False
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("purple")
     boxDrawer()
     wallDrawer()
     (x,y) = pygame.mouse.get_pos()
-    if click:
-        col = int(x/boxW)
-        row = int(y/boxH)
+    col = int(x / boxW)
+    row = int(y / boxH)
+    curTime = curTime+1
+    if click and curTime>LastClick+3:
         print(col, row, (x,y))
-        squareColor[col][row] = pygame.Color(int(255*rand.random()),int(255*rand.random()),int(255*rand.random()))
+        if stateSquare[col][row] == "Clicked":
+            stateSquare[col][row] = "Unclicked"
+            squareColor[col][row] = pygame.Color(0, 0, 0)
+        else:
+            stateSquare[col][row] = "Clicked"
+            squareColor[col][row] = pygame.Color(100, 100, 100)
+        boxDrawer()
+        LastClick = curTime
+        print(LastClick)
+    else:
+        if stateSquare[col][row] == "Clicked":
+            squareColor[col][row] = pygame.Color(50, 50, 50)
+            boxDrawer()
+            squareColor[col][row] = pygame.Color(100,100,100)
+            stateSquare[col][row] = "Clicked"
+        else:
+            squareColor[col][row] = pygame.Color(50, 50, 50)
+            boxDrawer()
+            squareColor[col][row] = pygame.Color(0, 0, 0)
+            stateSquare[col][row] = "Unclicked"
+    wallDrawer()
 
 
-    '''
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
+
+    '''if keys[pygame.K_w]:
         player_pos.y -= 300 * dt
     if keys[pygame.K_s]:
         player_pos.y += 300 * dt
     if keys[pygame.K_a]:
         player_pos.x -= 300 * dt
     if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
-    '''
+        player_pos.x += 300 * dt'''
 
     # flip() the display to put your work on screen
     pygame.display.flip()
