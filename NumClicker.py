@@ -9,32 +9,23 @@ boxW = 32
 boxH = 32
 borderW = 1
 cols = int(xScene/boxW)+1
-rows = int(yScene/boxH)+1
+rows = int(yScene/boxH)+1\
 
-@dataclass
-class Model:
-  running : bool = True
-  grid_on : ... = field(default_factory=list)
-  mouse_pos : ... = (-10,-10)
 
-class ModelData():
-  def __init__(self, running = True, edges = defaultdict(set),
-               mouse_pos = (-10,-10)):
-    self.running = running
-    self.mouse_pos = mouse_pos
-    self.cellValue = [[0 for x in range(rows)] for y in range(cols)]
-    self.stateSquare = [["Unclicked" for x in range(rows)] for y in range(cols)]
-    self.edges = defaultdict(set)
-    self.squareColor = [[defaultNotClickedColor for x in range(rows)] for y in range(cols)]
-    self.isSubtractMode = False
+edges = defaultdict(set)
+#edges[(1,1)] = {(0,1)} possible maze implementation later
 dirs = [(0,1), (1,0), (0,-1), (-1,0)]
+stateSquare = [["Unclicked" for x in range(rows)] for y in range(cols)]
 global BLACK
 BLACK = pygame.color.Color('black')  # usually a global
+global cellValue
+cellValue = [[0 for x in range(rows)] for y in range(cols)]
 
 defaultNotClickedColor = pygame.Color(100,100,100)
 defaultClickedColor = pygame.Color(0,100,0)
 defaultHoveringColor = pygame.Color(50,50,50)
-
+global squareColor
+squareColor = [[defaultNotClickedColor for x in range(rows)] for y in range(cols)]
 def main():
     pygame.init()
     screen = pygame.display.set_mode((xScene, yScene))
@@ -47,8 +38,8 @@ def main():
     LastClick = 0
     curTime =0
     click=False
+    isSubtractMode = False
     player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-    model = ModelData()
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -70,35 +61,35 @@ def main():
         curTime = curTime+1
         if click and curTime>LastClick+5:
             print(col, row, (x,y)) # debug
-            if model.isSubtractMode:
-                model.cellValue[col][row] -= 1
+            if isSubtractMode:
+                cellValue[col][row] -= 1
             else:
-                model.cellValue[col][row] +=1
-            if model.stateSquare[col][row] == "Clicked":
-                model.stateSquare[col][row] = "Unclicked"
-                model.squareColor[col][row] = defaultNotClickedColor
+                cellValue[col][row] +=1
+            if stateSquare[col][row] == "Clicked":
+                stateSquare[col][row] = "Unclicked"
+                squareColor[col][row] = defaultNotClickedColor
             else:
-                model.stateSquare[col][row] = "Clicked"
-                model.squareColor[col][row] = defaultClickedColor
-            boxDrawer(screen, model)
+                stateSquare[col][row] = "Clicked"
+                squareColor[col][row] = defaultClickedColor
+            boxDrawer(screen, isSubtractMode)
             LastClick = curTime
         else:
-            if model.stateSquare[col][row] == "Clicked":
-                model.squareColor[col][row] = defaultHoveringColor
-                boxDrawer(screen, model)
-                model.squareColor[col][row] = defaultClickedColor
-                model.stateSquare[col][row] = "Clicked"
+            if stateSquare[col][row] == "Clicked":
+                squareColor[col][row] = defaultHoveringColor
+                boxDrawer(screen, isSubtractMode)
+                squareColor[col][row] = defaultClickedColor
+                stateSquare[col][row] = "Clicked"
             else:
-                model.squareColor[col][row] = defaultHoveringColor
-                boxDrawer(screen, model)
-                model.squareColor[col][row] = defaultNotClickedColor
-                model.stateSquare[col][row] = "Unclicked"
-        wallDrawer(screen, model)
+                squareColor[col][row] = defaultHoveringColor
+                boxDrawer(screen, isSubtractMode)
+                squareColor[col][row] = defaultNotClickedColor
+                stateSquare[col][row] = "Unclicked"
+        wallDrawer(screen)
 
 
         keys = pygame.key.get_pressed()
-        keyhandler(keys, model)
-        drawUI(screen, col, row, model)
+        isSubtractMode = keyhandler(keys, isSubtractMode)
+        drawUI(screen, col, row, isSubtractMode)
 
         # flip() the display to put your work on screen
         pygame.display.flip()
@@ -107,28 +98,29 @@ def main():
         # dt is delta time in seconds since last frame, used for framerate-
         # independent physics.
         # I don't use this, but it is useful to have if i want to make smooth movements later on
-        dt = clock.tick(15) / 1000
+        dt = clock.tick(60) / 1000
 
     pygame.quit()
-def keyhandler(keys, model):
-    model.isSubtractMode = True if keys[pygame.K_SPACE] else False
-def boxDrawer(screen, model): #changes squareColor array into a grid with each color on that square
+def keyhandler(keys, isSubtractMode):
+    isSubtractMode = True if keys[pygame.K_SPACE] else False
+    return isSubtractMode
+def boxDrawer(screen, isSubtractMode): #changes squareColor array into a grid with each color on that square
     for col in range(cols):
         for row in range(rows):
             pygame.draw.rect(screen, pygame.Color(0, 100, 0), pygame.Rect((boxW*col,boxH*row), (boxW,boxH)), width=borderW)#green borders, draw over with red if there is wall
             topLeftX = boxW*col+borderW
             topLeftY = boxH*row+borderW
             theCell = pygame.Rect((topLeftX,topLeftY), (boxW-(2*borderW),boxH-(2*borderW)))
-            pygame.draw.rect(screen, model.squareColor[col][row], theCell)
-            text = font.render(f"{model.cellValue[col][row]}", False, BLACK)
+            pygame.draw.rect(screen, squareColor[col][row], theCell)
+            text = font.render(f"{cellValue[col][row]}", False, BLACK)
             textPos = theCell
             screen.blit(text, textPos)
 
-def wallDrawer(screen, model):
+def wallDrawer(screen):
     for col in range(cols):
         for row in range(rows):
             for i in range(4):
-                if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
+                if (col + dirs[i][0], row + dirs[i][1]) not in edges[(col, row)]:
                     current = (col,row)
                     dir =dirs[i]
                     if i > 1:
@@ -139,11 +131,11 @@ def wallDrawer(screen, model):
                         endPos = (topLeft[0] + (boxW+borderW)*(dir[0]), topLeft[1] + (boxH+borderW)*(dir[1]))
                     pygame.draw.line(screen, pygame.Color(100, 0, 0), topLeft, endPos, width=borderW)
 
-def drawUI(screen, col, row, model):
+def drawUI(screen, col, row, isSubtractMode):
     topLeft = (0, int(4*screen.get_height()/5))
     theCell = pygame.Rect(topLeft, (screen.get_width(), int(screen.get_height()/5)))
     pygame.draw.rect(screen, pygame.Color(0, 0, 0), theCell)
-    text = font.render(f"({col},{row})", False, pygame.Color(255,0,0)) if model.isSubtractMode else font.render(f"({col},{row})", False, pygame.Color(255,255,255))
+    text = font.render(f"({col},{row})", False, pygame.Color(255,0,0)) if isSubtractMode else font.render(f"({col},{row})", False, pygame.Color(255,255,255))
     textPos = pygame.Rect((topLeft[0]+int(screen.get_width()/2-50), topLeft[1]+int(screen.get_height()/10)), (screen.get_width(), int(screen.get_height()/3)))
     screen.blit(text, textPos)
 main()
