@@ -11,7 +11,7 @@ boxH = 32
 borderW = 1
 cols = int(xScene / boxW) + 1
 rows = int(yScene / boxH) + 1
-dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 global BLACK
 BLACK = pygame.color.Color("black")  # usually a global
 defaultNotClickedColor = pygame.Color(100, 100, 100)
@@ -37,9 +37,9 @@ class ModelData:
         self.x = -10
         self.y = 10
         self.screen = screen
-        self.cellValue = [[0 for x in range(rows)] for y in range(cols)]
+        self.cellHidden = [["Hidden" for x in range(rows)] for y in range(cols)]
         self.stateSquare = [["Unclicked" for x in range(rows)] for y in range(cols)]
-        self.edges = defaultdict(set)
+        self.edges = edges
         self.squareColor = [
             [defaultNotClickedColor for x in range(rows)] for y in range(cols)
         ]
@@ -51,7 +51,11 @@ class ModelData:
 
 def main():
     pygame.init()
-    model = ModelData()
+    edges = defaultdict(set)
+    edges[(2, 2)] = {(1, 2), (2, 1)}
+    edges[(1, 2)] = {(2, 2)}
+    edges[(2, 1)] = {(2, 2)}
+    model = ModelData(edges=edges)
     clock = pygame.time.Clock()
     running = True
     global font
@@ -104,9 +108,9 @@ def mousehandler(model):
     if model.click and model.curTime > model.lastClick + 5:
         print(col, row, (model.x, model.y))  # debug
         if model.isSubtractMode:
-            model.cellValue[col][row] -= 1
+            model.cellHidden[col][row] = "Hidden"
         else:
-            model.cellValue[col][row] += 1
+            model.cellHidden[col][row] += "Unhidden"
         if model.stateSquare[col][row] == "Clicked":
             model.stateSquare[col][row] = "Unclicked"
             model.squareColor[col][row] = defaultNotClickedColor
@@ -149,40 +153,60 @@ def boxDrawer(
                 (topLeftX, topLeftY), (boxW - (2 * borderW), boxH - (2 * borderW))
             )
             pygame.draw.rect(model.screen, model.squareColor[col][row], theCell)
-            text = font.render(f"{model.cellValue[col][row]}", False, BLACK)
-            textPos = theCell
-            model.screen.blit(text, textPos)
 
 
+# dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 def wallDrawer(model):
     for col in range(cols):
         for row in range(rows):
-            for i in range(4):
-                if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
-                    current = (col, row)
-                    dir = dirs[i]
-                    if i > 1:
-                        topLeft = (
-                            (boxW * (col + 1)) - borderW,
-                            (boxH * (row + 1)) - borderW,
+            if model.cellHidden[col][row] == "Unhidden":
+                for i in range(4):
+                    if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
+                        match i:
+                            case 0:
+                                startPos = (
+                                    (boxW * col),
+                                    (boxH * row),  # top left
+                                )
+                                endPos = (
+                                    startPos[0] + boxW,
+                                    startPos[1] + 0,
+                                )
+                            case 1:
+                                startPos = (
+                                    (boxW * col),
+                                    (boxH * row),  # top left
+                                )
+                                endPos = (
+                                    startPos[0] + 0,
+                                    startPos[1] + boxH,
+                                )
+                            case 2:
+                                startPos = (
+                                    (boxW * (col + 1) - borderW),
+                                    (boxH * (row + 1) - borderW),  # bottom right
+                                )
+                                endPos = (
+                                    startPos[0] - boxW,
+                                    startPos[1] + 0,
+                                )
+                            case 3:
+                                startPos = (
+                                    (boxW * (col + 1) - borderW),
+                                    (boxH * (row + 1) - borderW),  # bottom right
+                                )
+                                endPos = (
+                                    startPos[0] + 0,
+                                    startPos[1] - boxH,
+                                )
+
+                        pygame.draw.line(
+                            model.screen,
+                            pygame.Color(100, 0, 0),
+                            startPos,
+                            endPos,
+                            width=borderW,
                         )
-                        endPos = (
-                            topLeft[0] + boxW * (dir[0]),
-                            topLeft[1] + boxH * (dir[1]),
-                        )
-                    else:
-                        topLeft = (boxW * col, boxH * row)
-                        endPos = (
-                            topLeft[0] + (boxW + borderW) * (dir[0]),
-                            topLeft[1] + (boxH + borderW) * (dir[1]),
-                        )
-                    pygame.draw.line(
-                        model.screen,
-                        pygame.Color(100, 0, 0),
-                        topLeft,
-                        endPos,
-                        width=borderW,
-                    )
 
 
 def drawUI(col, row, model):
