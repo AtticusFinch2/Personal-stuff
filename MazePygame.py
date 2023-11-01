@@ -2,6 +2,7 @@ import pygame
 import random as rand
 from collections import defaultdict
 from dataclasses import dataclass, field
+import makeGrid
 
 # window setup
 xScene = 1000
@@ -51,10 +52,8 @@ class ModelData:
 
 def main():
     pygame.init()
-    edges = defaultdict(set)
-    edges[(2, 2)] = {(1, 2), (2, 1)}
-    edges[(1, 2)] = {(2, 2)}
-    edges[(2, 1)] = {(2, 2)}
+    inpGraph = makeGrid.makeGridTuple(3,3)
+    edges = defaultdict(set, inpGraph)
     model = ModelData(edges=edges)
     clock = pygame.time.Clock()
     running = True
@@ -111,25 +110,24 @@ def mousehandler(model):
             model.cellHidden[col][row] = "Hidden"
         else:
             model.cellHidden[col][row] += "Unhidden"
-        if model.stateSquare[col][row] == "Clicked":
-            model.stateSquare[col][row] = "Unclicked"
+        if model.stateSquare[col][row] == "Unhidden":
+            model.stateSquare[col][row] = "Hidden"
             model.squareColor[col][row] = defaultNotClickedColor
         else:
-            model.stateSquare[col][row] = "Clicked"
+            model.stateSquare[col][row] = "Unhidden"
             model.squareColor[col][row] = defaultClickedColor
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
-        if model.stateSquare[col][row] == "Clicked":
+        if model.stateSquare[col][row] == "Unhidden":
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
             model.squareColor[col][row] = defaultClickedColor
-            model.stateSquare[col][row] = "Clicked"
         else:
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
             model.squareColor[col][row] = defaultNotClickedColor
-            model.stateSquare[col][row] = "Unclicked"
+            model.stateSquare[col][row] = "Hidden"
 
 
 def keyhandler(keys, model):
@@ -143,7 +141,7 @@ def boxDrawer(
         for row in range(rows):
             pygame.draw.rect(
                 model.screen,
-                pygame.Color(0, 100, 0),
+                model.squareColor[col][row], # we do this so that we can change color to form standard grid later
                 pygame.Rect((boxW * col, boxH * row), (boxW, boxH)),
                 width=borderW,
             )  # green borders, draw over with red if there is wall
@@ -159,7 +157,6 @@ def boxDrawer(
 def wallDrawer(model):
     for col in range(cols):
         for row in range(rows):
-            if model.cellHidden[col][row] == "Unhidden":
                 for i in range(4):
                     if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
                         match i:
