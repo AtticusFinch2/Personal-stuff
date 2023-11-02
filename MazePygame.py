@@ -55,7 +55,6 @@ class ModelData:
         self.timeIn = {}
         self.timeOut = {}
 
-
 def main():
     pygame.init()
     inpGraph = makeGrid.makeMaze(cols,rows, (0,0))
@@ -108,7 +107,6 @@ def main():
 
     pygame.quit()
 
-
 def mousehandler(model):
     col = int(model.x / boxW)
     row = int(model.y / boxH)
@@ -119,8 +117,8 @@ def mousehandler(model):
             model.stateSquare[col][row] = "Hidden"
             model.squareColor[col][row] = defaultNotClickedColor
         else:
-            model.stateSquare[col][row] = "Unhidden"  # clicked on hidden
-            model.squareColor[col][row] = defaultClickedColor
+            model.stateSquare[col][row] = "Start"  # clicked on hidden
+            model.squareColor[col][row] = pygame.Color(100,0,100)
             model.stack.append((col,row))
         boxDrawer(model)
         model.lastClick = model.curTime
@@ -129,6 +127,10 @@ def mousehandler(model):
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
             model.squareColor[col][row] = defaultClickedColor
+        elif model.stateSquare[col][row] == "Start":
+            model.squareColor[col][row] = pygame.Color(50,0,50)
+            boxDrawer(model)
+            model.squareColor[col][row] = pygame.Color(100,0,100)
         else:  # hovered over hidden
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
@@ -140,6 +142,15 @@ def keyhandler(keys, model):
     model.isSubtractMode = True if keys[pygame.K_SPACE] else False
     if keys[pygame.K_r]:
         model.edges = defaultdict(set, makeGrid.makeMaze(cols,rows, (0,0)))
+        model.stateSquare = [["Hidden" for x in range(rows)] for y in range(cols)]
+        model.squareColor = [[defaultNotClickedColor for x in range(rows)] for y in range(cols)]
+        model.visited = set()
+        model.stack = []
+        model.path = []
+        model.now = 0
+        model.tree = {node: set() for node in model.edges}
+        model.timeIn = {}
+        model.timeOut = {}
 
 def tickhandler(model):
     if model.stack:
@@ -147,7 +158,8 @@ def tickhandler(model):
         model.now += 1
         model.timeIn[current] = model.now
         model.visited.add(current)
-        model.stateSquare[current[0]][current[1]] = "Unhidden"
+        if model.stateSquare[current[0]][current[1]] != "Start":
+            model.stateSquare[current[0]][current[1]] = "Unhidden"
     else:  # when stack empty and parent not, this is the TimeOut run
         current = model.path.pop()
     weProcess = True
