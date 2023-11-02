@@ -18,6 +18,8 @@ BLACK = pygame.color.Color("black")  # usually a global
 defaultNotClickedColor = pygame.Color(100, 100, 100)
 defaultClickedColor = pygame.Color(0, 100, 0)
 defaultHoveringColor = pygame.Color(50, 50, 50)
+defaultDiscoveredColor = pygame.Color(100, 100, 0)
+defaultStartColor = pygame.Color(100, 0, 100)
 
 
 @dataclass
@@ -51,13 +53,14 @@ class ModelData:
         self.stack = []
         self.path = []
         self.now = 0
-        self.tree = {node:set() for node in edges}
+        self.tree = {node: set() for node in edges}
         self.timeIn = {}
         self.timeOut = {}
 
+
 def main():
     pygame.init()
-    inpGraph = makeGrid.makeMaze(cols,rows, (0,0))
+    inpGraph = makeGrid.makeMaze(cols, rows, (0, 0))
     print(inpGraph)
     edges = defaultdict(set, inpGraph)
     model = ModelData(edges=edges)
@@ -92,7 +95,7 @@ def main():
 
         keys = pygame.key.get_pressed()
         keyhandler(keys, model)
-        #drawUI(col, row, model)
+        # drawUI(col, row, model)
         if model.stack or model.path:
             tickhandler(model)
 
@@ -107,6 +110,7 @@ def main():
 
     pygame.quit()
 
+
 def mousehandler(model):
     col = int(model.x / boxW)
     row = int(model.y / boxH)
@@ -118,19 +122,20 @@ def mousehandler(model):
             model.squareColor[col][row] = defaultNotClickedColor
         else:
             model.stateSquare[col][row] = "Start"  # clicked on hidden
-            model.squareColor[col][row] = pygame.Color(100,0,100)
-            model.stack.append((col,row))
+            model.squareColor[col][row] = defaultStartColor
+            model.stack.append((col, row))
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
         if model.stateSquare[col][row] == "Unhidden":  # hovered over unhidden
+            temp = model.squareColor[col][row]
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
-            model.squareColor[col][row] = defaultClickedColor
+            model.squareColor[col][row] = temp
         elif model.stateSquare[col][row] == "Start":
-            model.squareColor[col][row] = pygame.Color(50,0,50)
+            model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
-            model.squareColor[col][row] = pygame.Color(100,0,100)
+            model.squareColor[col][row] = defaultStartColor
         else:  # hovered over hidden
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
@@ -141,9 +146,11 @@ def mousehandler(model):
 def keyhandler(keys, model):
     model.isSubtractMode = True if keys[pygame.K_SPACE] else False
     if keys[pygame.K_r]:
-        model.edges = defaultdict(set, makeGrid.makeMaze(cols,rows, (0,0)))
+        model.edges = defaultdict(set, makeGrid.makeMaze(cols, rows, (0, 0)))
         model.stateSquare = [["Hidden" for x in range(rows)] for y in range(cols)]
-        model.squareColor = [[defaultNotClickedColor for x in range(rows)] for y in range(cols)]
+        model.squareColor = [
+            [defaultNotClickedColor for x in range(rows)] for y in range(cols)
+        ]
         model.visited = set()
         model.stack = []
         model.path = []
@@ -151,6 +158,7 @@ def keyhandler(keys, model):
         model.tree = {node: set() for node in model.edges}
         model.timeIn = {}
         model.timeOut = {}
+
 
 def tickhandler(model):
     if model.stack:
@@ -160,6 +168,7 @@ def tickhandler(model):
         model.visited.add(current)
         if model.stateSquare[current[0]][current[1]] != "Start":
             model.stateSquare[current[0]][current[1]] = "Unhidden"
+            model.squareColor[current[0]][current[1]] = defaultDiscoveredColor
     else:  # when stack empty and parent not, this is the TimeOut run
         current = model.path.pop()
     weProcess = True
@@ -185,6 +194,7 @@ def tickhandler(model):
         model.stack.append(temp)
         model.path.append(current)
 
+
 def boxDrawer(
     model,
 ):  # changes squareColor array into a grid with each color on that square
@@ -192,7 +202,9 @@ def boxDrawer(
         for row in range(rows):
             pygame.draw.rect(
                 model.screen,
-                model.squareColor[col][row], # we do this so that we can change color to form standard grid later
+                model.squareColor[col][
+                    row
+                ],  # we do this so that we can change color to form standard grid later
                 pygame.Rect((boxW * col, boxH * row), (boxW, boxH)),
                 width=borderW,
             )  # green borders, draw over with red if there is wall
@@ -210,7 +222,9 @@ def wallDrawer(model):
         for row in range(rows):
             if model.stateSquare[col][row] == "Unhidden":
                 for i in range(4):
-                    if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
+                    if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[
+                        (col, row)
+                    ]:
                         match i:
                             case 0:
                                 startPos = (

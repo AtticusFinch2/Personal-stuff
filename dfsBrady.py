@@ -3,9 +3,9 @@ from collections import deque
 from collections import defaultdict
 import pytest
 import copy
-def dfsOne(
-    edges, start=1
-):
+
+
+def dfsOne(edges, start=1):
     stk = [start]
     visited = {start}
     now = 0
@@ -36,7 +36,7 @@ def dfsOne(
         else:
             stk.append(temp)
             path.append(current)
-    return (visited)
+    return visited
 
 
 def dfsAll(edges):  # O(V+E)
@@ -51,16 +51,16 @@ def dfsAll(edges):  # O(V+E)
                 visited.add(node)
                 sumVertVisited += 1
         start += 1
-def dfsPosn(
-    edges, start=(0,0)
-):
+
+
+def dfsPosn(edges, start=(0, 0)):
     stk = [start]
     visited = {start}
     now = 0
     timeIn = {start: 1}
     timeOut = {}
     path = []
-    tree = {node:set() for node in edges}
+    tree = {node: set() for node in edges}
     while stk or path:
         if stk:
             current = stk.pop()
@@ -89,16 +89,14 @@ def dfsPosn(
     return tree
 
 
-def dfsPosnRand(
-    edges, start=(0,0)
-):
+def dfsPosnRand(edges, start=(0, 0)):
     stk = [start]
     visited = {start}
     now = 0
     timeIn = {start: 1}
     timeOut = {}
     path = []
-    tree = {node:set() for node in edges}
+    tree = {node: set() for node in edges}
     while stk or path:
         if stk:
             current = stk.pop()

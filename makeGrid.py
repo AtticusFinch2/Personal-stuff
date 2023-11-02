@@ -1,4 +1,6 @@
 import dfsBrady
+
+
 def make_grid(width: int, height: int):
     i = 0
     ans = {j: set() for j in range(width * height)}
@@ -24,12 +26,17 @@ def make_grid(width: int, height: int):
     ansList = {key: [edge for edge in ans[key]] for key in ans}
     # To change to output to dict of sets, change output from ansList to ans, and vice versa
     return ans
+
+
 def toSet(dict):
-    return {key:{value for value in dict[key]} for key in dict}
+    return {key: {value for value in dict[key]} for key in dict}
+
 
 def test_make_grid_1():
     ans = make_grid(3, 2)
-    correct = toSet({0: [1, 3], 1: [0, 2, 4], 2: [1, 5], 3: [0, 4], 4: [1, 3, 5], 5: [2, 4]})
+    correct = toSet(
+        {0: [1, 3], 1: [0, 2, 4], 2: [1, 5], 3: [0, 4], 4: [1, 3, 5], 5: [2, 4]}
+    )
 
     assert correct == ans
 
@@ -42,25 +49,34 @@ def test_make_grid_2():
 
 def test_make_grid_3():
     ans = make_grid(3, 3)
-    correct = toSet({
-        0: [1, 3],
-        1: [0, 2, 4],
-        2: [1, 5],
-        3: [0, 4, 6],
-        4: [1, 3, 5, 7],
-        5: [8, 2, 4],
-        6: [3, 7],
-        7: [8, 4, 6],
-        8: [5, 7],
-    })
+    correct = toSet(
+        {
+            0: [1, 3],
+            1: [0, 2, 4],
+            2: [1, 5],
+            3: [0, 4, 6],
+            4: [1, 3, 5, 7],
+            5: [8, 2, 4],
+            6: [3, 7],
+            7: [8, 4, 6],
+            8: [5, 7],
+        }
+    )
     assert correct == ans
 
-#converting int value to (x,y)
-def makeGridTuple(w,h):
-    ans = make_grid(w,h)
-    return {(key%w, key//w):{(value%w, value//w) for value in ans[key]} for key in ans}
+
+# converting int value to (x,y)
+def makeGridTuple(w, h):
+    ans = make_grid(w, h)
+    return {
+        (key % w, key // w): {(value % w, value // w) for value in ans[key]}
+        for key in ans
+    }
+
 
 import random
-def makeMaze(w,h, start=(0,0)):
-    grid = makeGridTuple(w,h)
+
+
+def makeMaze(w, h, start=(0, 0)):
+    grid = makeGridTuple(w, h)
     return dfsBrady.dfsPosnRand(grid, start)
