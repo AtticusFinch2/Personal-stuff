@@ -10,8 +10,8 @@ yScene = 800
 boxW = 40
 boxH = 40
 borderW = 3
-cols = int(xScene / boxW) + 1
-rows = int(yScene / boxH) + 1
+cols = int(xScene / boxW)
+rows = int(yScene / boxH)
 dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 global BLACK
 BLACK = pygame.color.Color("black")  # usually a global
@@ -38,8 +38,7 @@ class ModelData:
         self.x = -10
         self.y = 10
         self.screen = screen
-        self.cellHidden = [["Hidden" for x in range(rows)] for y in range(cols)]
-        self.stateSquare = [["Unclicked" for x in range(rows)] for y in range(cols)]
+        self.stateSquare = [["Hidden" for x in range(rows)] for y in range(cols)]
         self.edges = edges
         self.squareColor = [
             [defaultNotClickedColor for x in range(rows)] for y in range(cols)
@@ -94,7 +93,7 @@ def main():
 
         keys = pygame.key.get_pressed()
         keyhandler(keys, model)
-        drawUI(col, row, model)
+        #drawUI(col, row, model)
         if model.stack or model.path:
             tickhandler(model)
 
@@ -116,21 +115,21 @@ def mousehandler(model):
     model.curTime += 1
     if model.click and model.curTime > model.lastClick + 10:
         print(col, row, (model.x, model.y))  # debug
-        if model.stateSquare[col][row] == "Unhidden":
+        if model.stateSquare[col][row] == "Unhidden":  # clicked on unhidden
             model.stateSquare[col][row] = "Hidden"
             model.squareColor[col][row] = defaultNotClickedColor
         else:
-            model.stateSquare[col][row] = "Unhidden"
+            model.stateSquare[col][row] = "Unhidden"  # clicked on hidden
             model.squareColor[col][row] = defaultClickedColor
             model.stack.append((col,row))
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
-        if model.stateSquare[col][row] == "Unhidden":
+        if model.stateSquare[col][row] == "Unhidden":  # hovered over unhidden
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
             model.squareColor[col][row] = defaultClickedColor
-        else:
+        else:  # hovered over hidden
             model.squareColor[col][row] = defaultHoveringColor
             boxDrawer(model)
             model.squareColor[col][row] = defaultNotClickedColor
@@ -148,6 +147,7 @@ def tickhandler(model):
         model.now += 1
         model.timeIn[current] = model.now
         model.visited.add(current)
+        model.stateSquare[current[0]][current[1]] = "Unhidden"
     else:  # when stack empty and parent not, this is the TimeOut run
         current = model.path.pop()
     weProcess = True
@@ -168,6 +168,7 @@ def tickhandler(model):
     if weProcess:  # when we process current
         model.now += 1
         model.timeOut[current] = model.now
+        model.squareColor[current[0]][current[1]] = defaultClickedColor
     else:
         model.stack.append(temp)
         model.path.append(current)
