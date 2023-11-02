@@ -1,3 +1,4 @@
+import dfsBrady
 def make_grid(width: int, height: int):
     i = 0
     ans = {j: set() for j in range(width * height)}
@@ -60,6 +61,6 @@ def makeGridTuple(w,h):
     return {(key%w, key//w):{(value%w, value//w) for value in ans[key]} for key in ans}
 
 import random
-def makeMaze(w,h, start):
+def makeMaze(w,h, start=(0,0)):
     grid = makeGridTuple(w,h)
-
+    return dfsBrady.dfsPosnRand(grid, start)

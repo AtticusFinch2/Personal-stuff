@@ -1,15 +1,15 @@
 import pygame
-import random as rand
+import random
 from collections import defaultdict
 from dataclasses import dataclass, field
 import makeGrid
 
 # window setup
-xScene = 1000
-yScene = 720
-boxW = 32
-boxH = 32
-borderW = 1
+xScene = 1200
+yScene = 800
+boxW = 40
+boxH = 40
+borderW = 3
 cols = int(xScene / boxW) + 1
 rows = int(yScene / boxH) + 1
 dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
@@ -48,11 +48,19 @@ class ModelData:
         self.click = False
         self.lastClick = 0
         self.curTime = 0
+        self.visited = set()
+        self.stack = []
+        self.path = []
+        self.now = 0
+        self.tree = {node:set() for node in edges}
+        self.timeIn = {}
+        self.timeOut = {}
 
 
 def main():
     pygame.init()
-    inpGraph = makeGrid.makeGridTuple(3,3)
+    inpGraph = makeGrid.makeMaze(cols,rows, (0,0))
+    print(inpGraph)
     edges = defaultdict(set, inpGraph)
     model = ModelData(edges=edges)
     clock = pygame.time.Clock()
@@ -87,15 +95,17 @@ def main():
         keys = pygame.key.get_pressed()
         keyhandler(keys, model)
         drawUI(col, row, model)
+        if model.stack or model.path:
+            tickhandler(model)
 
         # flip() the display to put your work on screen
         pygame.display.flip()
 
-        # limits FPS to 60
+        # limits FPS to 30
         # dt is delta time in seconds since last frame, used for framerate-
         # independent physics.
         # I don't use this, but it is useful to have if i want to make smooth movements later on
-        dt = clock.tick(60) / 1000
+        dt = clock.tick(30) / 1000
 
     pygame.quit()
 
@@ -104,18 +114,15 @@ def mousehandler(model):
     col = int(model.x / boxW)
     row = int(model.y / boxH)
     model.curTime += 1
-    if model.click and model.curTime > model.lastClick + 5:
+    if model.click and model.curTime > model.lastClick + 10:
         print(col, row, (model.x, model.y))  # debug
-        if model.isSubtractMode:
-            model.cellHidden[col][row] = "Hidden"
-        else:
-            model.cellHidden[col][row] += "Unhidden"
         if model.stateSquare[col][row] == "Unhidden":
             model.stateSquare[col][row] = "Hidden"
             model.squareColor[col][row] = defaultNotClickedColor
         else:
             model.stateSquare[col][row] = "Unhidden"
             model.squareColor[col][row] = defaultClickedColor
+            model.stack.append((col,row))
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
@@ -132,7 +139,38 @@ def mousehandler(model):
 
 def keyhandler(keys, model):
     model.isSubtractMode = True if keys[pygame.K_SPACE] else False
+    if keys[pygame.K_r]:
+        model.edges = defaultdict(set, makeGrid.makeMaze(cols,rows, (0,0)))
 
+def tickhandler(model):
+    if model.stack:
+        current = model.stack.pop()
+        model.now += 1
+        model.timeIn[current] = model.now
+        model.visited.add(current)
+    else:  # when stack empty and parent not, this is the TimeOut run
+        current = model.path.pop()
+    weProcess = True
+    temp = -1
+    ##### RANDOMIZATION #####
+    randEdges = []
+    for edge in model.edges[current]:
+        randEdges.append(edge)
+    random.shuffle(randEdges)
+    #########################
+    for edge in randEdges:
+        if edge not in model.visited:
+            weProcess = False
+            temp = edge
+            model.tree[temp].add(current)
+            model.tree[current].add(temp)
+            break
+    if weProcess:  # when we process current
+        model.now += 1
+        model.timeOut[current] = model.now
+    else:
+        model.stack.append(temp)
+        model.path.append(current)
 
 def boxDrawer(
     model,
@@ -157,6 +195,7 @@ def boxDrawer(
 def wallDrawer(model):
     for col in range(cols):
         for row in range(rows):
+            if model.stateSquare[col][row] == "Unhidden":
                 for i in range(4):
                     if (col + dirs[i][0], row + dirs[i][1]) not in model.edges[(col, row)]:
                         match i:
@@ -180,8 +219,8 @@ def wallDrawer(model):
                                 )
                             case 2:
                                 startPos = (
-                                    (boxW * (col + 1) - borderW),
-                                    (boxH * (row + 1) - borderW),  # bottom right
+                                    (boxW * (col + 1)),
+                                    (boxH * (row + 1)),  # bottom right
                                 )
                                 endPos = (
                                     startPos[0] - boxW,
@@ -189,8 +228,8 @@ def wallDrawer(model):
                                 )
                             case 3:
                                 startPos = (
-                                    (boxW * (col + 1) - borderW),
-                                    (boxH * (row + 1) - borderW),  # bottom right
+                                    (boxW * (col + 1)),
+                                    (boxH * (row + 1)),  # bottom right
                                 )
                                 endPos = (
                                     startPos[0] + 0,
