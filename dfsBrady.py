@@ -110,9 +110,7 @@ def dfsPosnRand(edges, start=(0, 0)):
         weProcess = True
         temp = -1
         ##### RANDOMIZATION #####
-        randEdges = []
-        for edge in edges[current]:
-            randEdges.append(edge)
+        randEdges = list(edges[current])
         random.shuffle(randEdges)
         #########################
         for edge in randEdges:
