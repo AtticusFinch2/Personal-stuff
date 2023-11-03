@@ -58,6 +58,7 @@ class ModelData:
         self.timeOut = {}
         self.end = end
         self.stateSquare[end[0]][end[1]] = "End"
+        self.start = (-1,-1)
 
 
 def main():
@@ -125,6 +126,7 @@ def mousehandler(model):
         else:
             model.stateSquare[col][row] = "Start"  # clicked on hidden
             model.squareColor[col][row] = defaultStartColor
+            model.start = (col,row)
             model.stack.append((col, row))
         boxDrawer(model)
         model.lastClick = model.curTime
@@ -185,7 +187,7 @@ def tickhandler(model):
     if weProcess:  # when we process current
         model.now += 1
         model.timeOut[current] = model.now
-        if (current[0], current[1]) != model.end:
+        if (current[0], current[1]) not in {model.end, model.start}:
             model.squareColor[current[0]][current[1]] = defaultClickedColor
     else:
         model.stack.append(temp)
