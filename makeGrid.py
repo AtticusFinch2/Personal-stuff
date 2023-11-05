@@ -74,7 +74,6 @@ def makeGridTuple(w, h):
     }
 
 
-import random
 
 
 def makeMaze(w, h, start=(0, 0)):

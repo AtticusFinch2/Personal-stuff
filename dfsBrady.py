@@ -109,10 +109,12 @@ def dfsPosnRand(edges, start=(0, 0)):
             isOutRun = True
         weProcess = True
         temp = -1
+
         ##### RANDOMIZATION #####
         randEdges = list(edges[current])
         random.shuffle(randEdges)
         #########################
+
         for edge in randEdges:
             if edge not in visited:
                 weProcess = False
