@@ -1,6 +1,6 @@
 import pygame
 import random
-from collections import defaultdict
+import math
 from dataclasses import dataclass, field
 
 xScene = 1000
@@ -97,10 +97,11 @@ def drawGrid(model):
 
 def mh(model, x, y, click):
     model.curTime += 1
-    if click and model.curTime > model.lastClick + 10:
+    if click and model.curTime > model.lastClick + 5:
         model.lastClick = model.curTime
         print("click", x, y)
-        if x < 350 and x > 150 and y > 150 and y < 350:
+        (deltX, deltY) = (250-x, 250-y)
+        if math.sqrt( deltX*deltX + deltY*deltY)<= 100:
             model.points += 5
             print("circle")
         elif (
