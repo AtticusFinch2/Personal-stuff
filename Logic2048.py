@@ -1,7 +1,7 @@
 # represent board as 2d array
 # check all ranges in 2d or 1d for their first and last index matching with nothing or just spaces between them
 # O(n^3) but nobody cares because n is 4 so its only 64 comparisons
-TestCase = [[2, 2, 4, 4], [0, 2, 0, 4], [4, 0, 2, 4], [0, 0, 0, 2048]]
+TestCase = [[2, 2, 4, 4], [0, 2, 0, 2], [4, 0, 2, 4], [0, 0, 0, 2]]
 
 
 def pushLeftRow(row):
@@ -15,17 +15,19 @@ def pushLeftRow(row):
             ):
                 if row[current] == row[current + j]:
                     # we collapse
-                    # print(f"collapse at:{current, j}")
+                    #print(f"collapse at:{current, j}")
                     ans[current] = row[current] * 2
+                    row[j] = 0
+                    break
                 j += 1
             for behind in range(current):  # collapse all spaces behind
                 if ans[behind] == 0:
                     ans[behind] = ans[current]
                     ans[current] = 0
-                    # print(f"backpedal at:{behind, current}, ans:{ans}, row:{row}")
+                    #print(f"backpedal at:{behind, current}, ans:{ans}, row:{row}")
                     break
         row[current] = ans[current]
-        # print(ans, row)
+        #print(ans, row)
     return ans
 
 
@@ -73,5 +75,4 @@ def pushDown(board):
     ans = transposeSquare(ans)
     return ans
 
-
-print(pushRight(TestCase))
+print(pushDown(TestCase))

@@ -1,12 +1,12 @@
 import pygame
+import Logic2048
 import random
-from collections import defaultdict
 from dataclasses import dataclass, field
 
 # window setup
 xScene = 800
 yScene = 800
-framerate = 60
+framerate = 15
 boxW = 200
 boxH = 200
 borderW = 5
@@ -16,18 +16,7 @@ rows = int(yScene / boxH)
 dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 borderColor = pygame.Color(122, 122, 110)
 bgColor = pygame.Color(245, 245, 220)
-@dataclass
-class square48:
-    pos: (int, int) = (-1,-1)
-    value: int = 0
-class square48New:
-    def __init__(
-            self,
-            pos,
-            value
-    ):
-        self.pos = pos
-        self.value = value
+
 
 @dataclass
 class Model:
@@ -40,17 +29,15 @@ class ModelData:
         self,
         running=True,
         screen=pygame.display.set_mode((xScene, yScene)),
-        sqd = {square48New((2,2),2)}
+        board = [[0,0,0,0]for x in range(4)]
     ):
         self.running = running
         self.x = -10
         self.y = -10
         self.screen = screen
         self.squareColor = [[pygame.color.Color(100,100,100) for x in range(rows)] for y in range(cols)]
-        self.squareDict = sqd
+        self.board = board
         self.click = False
-        self.lastClick = 0
-        self.curTime = 0
 
 
 
@@ -63,9 +50,6 @@ def main():
     global font
     font = pygame.font.Font(None, 36)
     dt = 0
-    player_pos = pygame.Vector2(
-        model.screen.get_width() / 2, model.screen.get_height() / 2
-    )
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -79,14 +63,14 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                    doNotUse = keyhandler(keys, model)
         # fill the screen with a color to wipe away anything from last frame
         model.screen.fill("purple")
         (model.x, model.y) = pygame.mouse.get_pos()
-        col = int(model.x / boxW)
-        row = int(model.y / boxH)
-        keys = pygame.key.get_pressed()
+
         bgDrawer(model)
-        #keyhandler(keys, model)
+
         # drawUI(col, row, model)
 
         # flip() the display to put your work on screen
@@ -103,13 +87,45 @@ def main():
 
 
 
-'''def keyhandler(keys, model):
+def keyhandler(keys, model):
     model.isSubtractMode = True if keys[pygame.K_SPACE] else False
-    if keys[pygame.K_UP]:'''
+    if keys[pygame.K_UP]:
+        model.board = Logic2048.pushUp(model.board)
+    elif keys[pygame.K_DOWN]:
+        model.board = Logic2048.pushDown(model.board)
+    elif keys[pygame.K_RIGHT]:
+        model.board = Logic2048.pushRight(model.board)
+    elif keys[pygame.K_LEFT]:
+        model.board = Logic2048.pushLeft(model.board)
+    else:
+        return "NOKEY"
+    zeroes = []
+    for col in range(4):
+        for row in range(4):
+            if model.board[row][col] == 0:
+                zeroes.append((row,col))
+    numOfZeros = len(zeroes)
+    if numOfZeros==0:
+        if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(model.board):
+            return "GAME OVER"
+        return "NOSPACES"
+    spawned = random.randrange(0,numOfZeros)
+    (zx,zy) = zeroes[spawned]
+    model.board[zx][zy] = random.randrange(2,4,2)
 
-
-
-
+cfv = { # color from value
+    2:pygame.Color(238, 228, 218),
+    4:pygame.Color(237, 224, 200),
+    8:pygame.Color(242, 177, 121),
+    16:pygame.Color(245, 149, 99),
+    32:pygame.Color(246, 124, 95),
+    64:pygame.Color(246, 94, 59),
+    128:pygame.Color(237, 207, 114),
+    256:pygame.Color(237, 204, 97),
+    512:pygame.Color(237, 200, 80),
+    1024:pygame.Color(237, 197, 63),
+    2048:pygame.Color(237, 194, 46)
+}
 
 
 def bgDrawer(
@@ -128,7 +144,21 @@ def bgDrawer(
             theCell = pygame.Rect(
                 (topLeftX, topLeftY), (boxW - (2 * borderW)-1, boxH - (2 * borderW)-1),
             )
-            pygame.draw.rect(model.screen, bgColor, theCell, 0, 0, boxradius,boxradius,boxradius,boxradius)
+            if model.board[row][col] !=0:
+                pygame.draw.rect(model.screen, cfv[model.board[row][col]], theCell, 0, 0, boxradius,
+                                 boxradius, boxradius, boxradius)
+                text = (
+                    font.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                )
+                textPos = text.get_rect(
+                    center = (
+                        topLeftX+boxW/2,
+                        topLeftY+boxH/2,
+                    )
+                )
+                model.screen.blit(text, textPos)
+            else:
+                pygame.draw.rect(model.screen, bgColor, theCell, 0, 0, boxradius,boxradius,boxradius,boxradius)
 
 
 
