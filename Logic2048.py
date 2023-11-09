@@ -2,9 +2,10 @@
 # check all ranges in 2d or 1d for their first and last index matching with nothing or just spaces between them
 # O(n^3) but nobody cares because n is 4 so its only 64 comparisons
 TestCase = [[2, 2, 4, 4], [0, 2, 0, 2], [4, 0, 2, 4], [0, 0, 0, 2]]
+import copy
 
-
-def pushLeftRow(row):
+def pushLeftRow(row1):
+    row = copy.deepcopy(row1)
     ans = [0, 0, 0, 0]
     for current in range(4):
         if row[current] != 0:
@@ -17,7 +18,9 @@ def pushLeftRow(row):
                     # we collapse
                     #print(f"collapse at:{current, j}")
                     ans[current] = row[current] * 2
-                    row[j] = 0
+                    ans[current+j] = 0
+                    row[current+j] = 0
+                    #print(row,ans)
                     break
                 j += 1
             for behind in range(current):  # collapse all spaces behind
@@ -26,12 +29,13 @@ def pushLeftRow(row):
                     ans[current] = 0
                     #print(f"backpedal at:{behind, current}, ans:{ans}, row:{row}")
                     break
+        #print(row, ans)
         row[current] = ans[current]
-        #print(ans, row)
     return ans
 
 
-def pushRightRow(row):
+def pushRightRow(row1):
+    row = copy.deepcopy(row1)
     row.reverse()
     ans = pushLeftRow(row)
     ans.reverse()
@@ -75,4 +79,4 @@ def pushDown(board):
     ans = transposeSquare(ans)
     return ans
 
-print(pushDown(TestCase))
+#print(pushDown(TestCase))
