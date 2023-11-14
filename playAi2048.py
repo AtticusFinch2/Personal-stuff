@@ -67,7 +67,7 @@ def main():
             if keys[pygame.K_q]:
                 running = False
             if event.type == pygame.KEYDOWN:
-                doNotUse = keyhandler(keys, model)
+                doNotUse = movehandler(model)
                 print(doNotUse)
                 if doNotUse == "GAME OVER":
                     running = False
@@ -105,21 +105,22 @@ def generateRand(model):
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = random.randrange(2, 4, 2)
+    model.board[zx][zy] = random.randrange(2, 5, 2)
 
 
-def keyhandler(keys, model):
+def movehandler(model):
+    move = Ai2048.bestMove(model.board)
     temp = model.board
-    if keys[pygame.K_UP]:
-        model.board = Logic2048.pushUp(model.board)
-    elif keys[pygame.K_DOWN]:
-        model.board = Logic2048.pushDown(model.board)
-    elif keys[pygame.K_RIGHT]:
-        model.board = Logic2048.pushRight(model.board)
-    elif keys[pygame.K_LEFT]:
-        model.board = Logic2048.pushLeft(model.board)
-    else:
-        return "NO KEY"
+    match move:
+        case "up":
+            model.board = Logic2048.pushUp(model.board)
+        case "down":
+            model.board = Logic2048.pushDown(model.board)
+        case "right":
+            model.board = Logic2048.pushRight(model.board)
+        case "left":
+            model.board = Logic2048.pushLeft (model.board)
+    print(move)
     if temp == model.board:
         if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
                 model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
