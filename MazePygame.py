@@ -1,25 +1,26 @@
 import pygame
 import random
 from collections import defaultdict
+from collections import deque
 from dataclasses import dataclass, field
 import makeGrid
 
 # window setup
 xScene = 1200
-yScene = 800
+yScene = 900
+uiHeight = 100
 framerate = 60
 boxW = 40
 boxH = 40
 borderW = 3
 cols = int(xScene / boxW)
-rows = int(yScene / boxH)
+rows = int((yScene-uiHeight) / boxH)
 dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 defaultNotClickedColor = pygame.Color(100, 100, 100)
 defaultClickedColor = pygame.Color(0, 100, 0)
 defaultHoveringColor = pygame.Color(50, 50, 50)
 defaultDiscoveredColor = pygame.Color(100, 100, 0)
 defaultStartColor = pygame.Color(100, 0, 100)
-
 
 @dataclass
 class Model:
@@ -45,12 +46,13 @@ class ModelData:
         self.squareColor = [
             [defaultNotClickedColor for x in range(rows)] for y in range(cols)
         ]
-        self.isSubtractMode = False
+        self.dfsMode = False
         self.click = False
         self.lastClick = 0
         self.curTime = 0
         self.visited = set()
         self.stack = []
+        self.queue = deque()
         self.path = []
         self.now = 0
         self.tree = {node: set() for node in edges}
@@ -75,6 +77,7 @@ def main():
     player_pos = pygame.Vector2(
         model.screen.get_width() / 2, model.screen.get_height() / 2
     )
+    ticker = 0
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -98,9 +101,17 @@ def main():
 
         keys = pygame.key.get_pressed()
         keyhandler(keys, model)
-        # drawUI(col, row, model)
-        if model.stack or model.path:
-            tickhandler(model)
+        #drawUI(model)
+        if ticker == 3:
+            ticker =0
+            if model.dfsMode:
+                if model.stack or model.path:
+                    tickhandler(model)
+            else:
+                if model.queue:
+                    tickhandlerbfs(model)
+        else:
+            ticker+=1
 
         # flip() the display to put your work on screen
         pygame.display.flip()
@@ -117,6 +128,10 @@ def main():
 def mousehandler(model):
     col = int(model.x / boxW)
     row = int(model.y / boxH)
+    if col>cols:
+        col = cols-1
+    elif row>rows:
+        row = rows-1
     model.curTime += 1
     if model.click and model.curTime > model.lastClick + 10:
         print(col, row, (model.x, model.y))  # debug
@@ -128,6 +143,7 @@ def mousehandler(model):
             model.squareColor[col][row] = defaultStartColor
             model.start = (col,row)
             model.stack.append((col, row))
+            model.queue.append((col,row))
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
@@ -153,6 +169,7 @@ def keyhandler(keys, model):
         ]
         model.visited = set()
         model.stack = []
+        model.queue = deque()
         model.path = []
         model.now = 0
         model.tree = {node: set() for node in model.edges}
@@ -192,7 +209,19 @@ def tickhandler(model):
     else:
         model.stack.append(temp)
         model.path.append(current)
-
+def tickhandlerbfs(model):
+    current = model.queue.popleft()
+    for b in model.edges[current]:
+        if b not in model.visited:
+            model.queue.append(b)
+            model.visited.add(b)
+            if model.stateSquare[b[0]][b[1]] not in {"Start", "End"}:
+                model.stateSquare[b[0]][b[1]] = "Unhidden"
+                model.squareColor[b[0]][b[1]] = defaultDiscoveredColor
+            elif (b[0], b[1]) == model.end:
+                model.squareColor[b[0]][b[1]] = pygame.Color(255, 0, 0)
+    if (current[0], current[1]) not in {model.end, model.start}:
+        model.squareColor[current[0]][current[1]] = defaultClickedColor
 
 def boxDrawer(
     model,
@@ -273,24 +302,14 @@ def drawWallForSquare(col, row, model):
                 endPos,
                 width=borderW,
             )
-def drawUI(col, row, model):
-    topLeft = (0, int(4 * model.screen.get_height() / 5))
-    theCell = pygame.Rect(
-        topLeft, (model.screen.get_width(), int(model.screen.get_height() / 5))
-    )
+def drawUI(model):
+    topLeft = (0, yScene-uiHeight)
+    theCell = pygame.Rect(topLeft, (model.screen.get_width(), uiHeight))
     pygame.draw.rect(model.screen, pygame.Color(0, 0, 0), theCell)
     text = (
-        font.render(f"({col},{row})", False, pygame.Color(255, 0, 0))
-        if model.isSubtractMode
-        else font.render(f"({col},{row})", False, pygame.Color(255, 255, 255))
+        font.render(f"{model.dfsMode}", False, pygame.Color(255, 0, 0))
     )
-    textPos = pygame.Rect(
-        (
-            topLeft[0] + int(model.screen.get_width() / 2 - 50),
-            topLeft[1] + int(model.screen.get_height() / 10),
-        ),
-        (model.screen.get_width(), int(model.screen.get_height() / 3)),
-    )
+    textPos = text.get_rect(center =(xScene/2, yScene-uiHeight))
     model.screen.blit(text, textPos)
 
 

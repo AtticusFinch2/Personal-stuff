@@ -7,7 +7,7 @@ import Ai2048
 # window setup
 xScene = 800
 yScene = 800
-framerate = 15
+framerate = 30
 boxW = 200
 boxH = 200
 borderW = 5
@@ -53,6 +53,7 @@ def main():
     fontbig = pygame.font.Font(None, 150)
     fontsmall = pygame.font.Font(None, 100)
     dt = 0
+    ticker=0
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -66,11 +67,11 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-            if event.type == pygame.KEYDOWN:
-                doNotUse = movehandler(model)
-                print(doNotUse)
-                if doNotUse == "GAME OVER":
-                    running = False
+        if ticker == 15:
+            movehandler(model)
+            ticker =0
+        else:
+            ticker+=1
         # fill the screen with a color to wipe away anything from last frame
         model.screen.fill("purple")
         (model.x, model.y) = pygame.mouse.get_pos()
@@ -125,8 +126,8 @@ def movehandler(model):
         if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
                 model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
                 model.board):
-            return "GAME OVER"
-        return "didNothing"
+            print("GAME OVER")
+        print("didNothing")
     generateRand(model)
 
 cfv = { # color from value
