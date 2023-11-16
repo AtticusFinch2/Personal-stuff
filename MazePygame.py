@@ -61,6 +61,7 @@ class ModelData:
         self.end = end
         self.stateSquare[end[0]][end[1]] = "End"
         self.start = (-1,-1)
+        self.speed = 3
 
 
 def main():
@@ -91,6 +92,8 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                keyhandler(keys, model)
         # fill the screen with a color to wipe away anything from last frame
         model.screen.fill("purple")
         (model.x, model.y) = pygame.mouse.get_pos()
@@ -98,15 +101,12 @@ def main():
         row = int(model.y / boxH)
         mousehandler(model)
         wallDrawer(model)
-
-        keys = pygame.key.get_pressed()
-        keyhandler(keys, model)
-        #drawUI(model)
-        if ticker == 3:
+        drawUI(model)
+        if ticker >= int(10/model.speed):
             ticker =0
             if model.dfsMode:
                 if model.stack or model.path:
-                    tickhandler(model)
+                    tickhandlerdfs(model)
             else:
                 if model.queue:
                     tickhandlerbfs(model)
@@ -128,9 +128,9 @@ def main():
 def mousehandler(model):
     col = int(model.x / boxW)
     row = int(model.y / boxH)
-    if col>cols:
+    if col>=cols:
         col = cols-1
-    elif row>rows:
+    elif row>=rows:
         row = rows-1
     model.curTime += 1
     if model.click and model.curTime > model.lastClick + 10:
@@ -142,8 +142,10 @@ def mousehandler(model):
             model.stateSquare[col][row] = "Start"  # clicked on hidden
             model.squareColor[col][row] = defaultStartColor
             model.start = (col,row)
-            model.stack.append((col, row))
-            model.queue.append((col,row))
+            if model.dfsMode:
+                model.stack.append((col, row))
+            else:
+                model.queue.append((col,row))
         boxDrawer(model)
         model.lastClick = model.curTime
     else:
@@ -176,9 +178,19 @@ def keyhandler(keys, model):
         model.timeIn = {}
         model.timeOut = {}
         model.stateSquare[model.end[0]][model.end[1]] = "End"
+    if keys[pygame.K_SPACE]:
+        model.dfsMode = not model.dfsMode
+    if keys[pygame.K_UP]:
+        model.speed += 1
+        model.speed = min(model.speed, 10)
+        model.speed = max(1, model.speed)
+    if keys[pygame.K_DOWN]:
+        model.speed -= 1
+        model.speed = min(model.speed, 10)
+        model.speed = max(1, model.speed)
 
 
-def tickhandler(model):
+def tickhandlerdfs(model):
     if model.stack:
         current = model.stack.pop()
         model.now += 1
@@ -232,19 +244,12 @@ def boxDrawer(
                 model.screen,
                 model.squareColor[col][
                     row
-                ],  # we do this so that we can change color to form standard grid later
-                pygame.Rect((boxW * col, boxH * row), (boxW, boxH)),
-                width=borderW,
-            )  # green borders, draw over with red if there is wall
-            topLeftX = boxW * col + borderW
-            topLeftY = boxH * row + borderW
-            theCell = pygame.Rect(
-                (topLeftX, topLeftY), (boxW - (2 * borderW), boxH - (2 * borderW))
+                ],
+                pygame.Rect(((boxW * col), (boxH * row)), (boxW+borderW, boxH+borderW)),
+                #width=borderW,
             )
-            pygame.draw.rect(model.screen, model.squareColor[col][row], theCell)
 
 
-# dirs = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 def wallDrawer(model):
     for col in range(cols):
         for row in range(rows):
@@ -307,9 +312,12 @@ def drawUI(model):
     theCell = pygame.Rect(topLeft, (model.screen.get_width(), uiHeight))
     pygame.draw.rect(model.screen, pygame.Color(0, 0, 0), theCell)
     text = (
-        font.render(f"{model.dfsMode}", False, pygame.Color(255, 0, 0))
+        font.render("DFS MODE", False, pygame.Color(255, 0, 0)) if model.dfsMode else font.render("BFS MODE", False, pygame.Color(255, 0, 0))
     )
-    textPos = text.get_rect(center =(xScene/2, yScene-uiHeight))
+    textPos = text.get_rect(center =(xScene/2, yScene-(uiHeight/2)))
+    model.screen.blit(text, textPos)
+    text = (font.render(f"Speed:{model.speed}", False, pygame.Color(255, 0, 0)))
+    textPos = text.get_rect(center=(int(3 * xScene / 4), yScene - (uiHeight / 2)))
     model.screen.blit(text, textPos)
 
 
