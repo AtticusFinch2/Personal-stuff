@@ -110,7 +110,7 @@ def generateRand(model):
 
 
 def movehandler(model):
-    move = Ai2048.bestMove(model.board)
+    move = Ai2048.bestMoveHeuristic(model.board, 3)
     temp = model.board
     match move:
         case "up":
