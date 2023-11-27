@@ -103,11 +103,12 @@ def monotonyHeuristic(board):#make sure we go up in value as we go down and to t
                 current = board[x][y]
                 newX = x + 1
                 newY = y + 1
-                if [newX < 4, newY < 4] == [True, True]:  # make sure in bounds
-                    if board[newX][y] > current:
-                        ans += board[newX][y] * current
-                    if board[x][newY] > current:
-                        ans += board[x][newY] * current
+                if newX < 4:  # make sure in bounds
+                    if board[newX][y] < current:
+                        ans -= (current - board[newX][y]) * current
+                if newY < 4:
+                    if board[x][newY] < current:
+                        ans -= (current - board[x][newY]) * current
     return ans
 print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board))
 

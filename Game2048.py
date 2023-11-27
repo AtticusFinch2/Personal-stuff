@@ -76,7 +76,7 @@ def main():
         (model.x, model.y) = pygame.mouse.get_pos()
 
         bgDrawer(model)
-        drawLoss(model)
+        #drawLoss(model)
         # drawUI(col, row, model)
 
         # flip() the display to put your work on screen
@@ -89,7 +89,7 @@ def main():
         dt = clock.tick(framerate) / 1000
 
     pygame.quit()
-
+generatable_tiles = [2,2,2,4] #amount proportional to weight
 def generateRand(model):
     zeroes = []
     for col in range(4):
@@ -105,7 +105,7 @@ def generateRand(model):
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = random.randrange(2, 4, 2)
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
 
 
 def keyhandler(keys, model):

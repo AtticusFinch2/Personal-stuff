@@ -67,7 +67,7 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-        if ticker == 15:
+        if ticker == 5:
             movehandler(model)
             ticker =0
         else:
@@ -90,7 +90,7 @@ def main():
         dt = clock.tick(framerate) / 1000
 
     pygame.quit()
-
+generatable_tiles = [2,2,2,4] #amount proportional to weight
 def generateRand(model):
     zeroes = []
     for col in range(4):
@@ -106,11 +106,13 @@ def generateRand(model):
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = random.randrange(2, 5, 2)
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
 
 
 def movehandler(model):
-    move = Ai2048.bestMoveHeuristic(model.board, 3)
+    #move = Ai2048.bestMoveHeuristic(model.board, 2)
+    move = Ai2048.bestMove(model.board)
+    move = Ai2048.bestMove(model.board)
     temp = model.board
     match move:
         case "up":
