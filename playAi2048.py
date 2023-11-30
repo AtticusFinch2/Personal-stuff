@@ -89,7 +89,7 @@ def main():
         dt = clock.tick(framerate) / 1000
 
     pygame.quit()
-generatable_tiles = [2,2,2,4] #amount proportional to weight
+generatable_tiles = [2,2,2,2,2,2,2,2,2,4] #amount proportional to weight
 def generateRand(model):
     zeroes = []
     for col in range(4):
@@ -105,7 +105,7 @@ def generateRand(model):
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 9)]
 
 
 
@@ -114,7 +114,7 @@ def movehandler(model):
     #move = Ai2048.bestMove(model.board)
     #move = Ai2048.bestMoveDepth(model.board,2)
     temp = model.board
-    for move in moves: # go through the moves and pick the first valid move
+    for move in moves:  # go through the moves and pick the first valid move
         if model.board != move[1]:
             model.board = move[1]
             model.Loss = move[0]

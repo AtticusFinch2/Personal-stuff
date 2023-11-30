@@ -44,11 +44,11 @@ def miniOptions(board):
             if board[x][y] == 0:
                 zero_pool.append((x,y))
                 nz+=1
-    ans = [copy.deepcopy(board) for x in range(nz*2)]
+    ans = [copy.deepcopy(board) for x in range(nz)]#*2)]
     for child in range(nz):
         ans[child][zero_pool[child][0]][zero_pool[child][1]] = 2
-    for child in range(nz, nz*2):
-        ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4
+    '''for child in range(nz, nz*2):
+        ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4'''
     return ans
 
 def maxOptions(board):
@@ -125,7 +125,7 @@ def biggestNum(board):
         for row in range(4):
             maxN = max(maxN, board[row][col])
     return maxN
-print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board), bigNumberHeuristic(example_board))
+#print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board), bigNumberHeuristic(example_board))
 def heuristicCombination(board):
     e = 16-emptyTilesHeuristic(board)
     s = smoothnessHeuristic(board)
@@ -157,4 +157,4 @@ def bestMoveHeuristic(board, depth):
     results = [(minimax2(boards[x], depth), boards[x], moves[x]) for x in range(4)]
     results.sort(key=sortFirst)
     return results
-print(bestMoveHeuristic(example_board, 0))
+#print(bestMoveHeuristic(example_board, 0))
