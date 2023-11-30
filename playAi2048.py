@@ -66,7 +66,7 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-        if ticker == 1:
+        if ticker == 0: #increase to slow it down
             movehandler(model)
             ticker =0
         else:
@@ -166,9 +166,13 @@ def bgDrawer(
             if model.board[row][col] !=0:
                 pygame.draw.rect(model.screen, getColorBox(model.board[row][col]), theCell, 0, 0, boxradius,
                                  boxradius, boxradius, boxradius)
-                if model.board[row][col] < 2048:
+                if model.board[row][col] < 99:
                     text = (
                         fontbig.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                    )
+                elif model.board[row][col] <= 2048:
+                    text = (
+                        fontsmall.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
                     )
                 else:
                     text = (
