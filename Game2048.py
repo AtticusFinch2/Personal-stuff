@@ -22,8 +22,6 @@ bgColor = pygame.Color(245, 245, 220)
 @dataclass
 class Model:
     running: bool = True
-    grid_on: ... = field(default_factory=list)
-    mouse_pos: ... = (-10, -10)
 
 class ModelData:
     def __init__(

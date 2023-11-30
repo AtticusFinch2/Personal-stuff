@@ -8,13 +8,13 @@ scoreGrid2 = [[4**15, 4**14, 4**13, 4**12],
              [4**8,  4**9,  4**10, 4**11],
              [4**7,  4**6,  4**5,  4**4],
              [4**0,  4**1,  4**2,  4**3]]
-example_board = [[0,0,2,0] for x in range(4)]
+example_board = [[0,0,2,2] for x in range(4)]
 MAX_INT = 2**30
 def LossOf(board):
     value = 0
     for col in range(4):
         for row in range(4):
-            value += scoreGrid[col][row] * board[col][row]
+            value += scoreGrid[col][row] * (board[col][row]**2)
     return value
 
 def bestMove(board):
@@ -29,10 +29,13 @@ def bestMove(board):
             min_loss = curLoss
     return min_loss_move
 def isTerminal(board):
-    for y in board:
+    '''for y in board:
         for x in y:
             if x==0: return False
-    return True
+    return True'''
+    if Logic2048.pushRight(board) == Logic2048.pushLeft(board) and Logic2048.pushUp(board) == Logic2048.pushDown(board):
+        return True
+    return False
 def miniOptions(board):
     zero_pool = []
     nz=0
@@ -93,7 +96,7 @@ def smoothnessHeuristic(board):  # penalize big differences between 2 given tile
                     newY = y+d[1]
                     if [newX>=0, newY>=0, newX<4, newY<4] == [True, True, True, True]:  # make sure in bounds
                         if board[newX][newY] != 0:
-                            ans += current * ((current - board[newX][newY])**2)  # this is the formula I made up
+                            ans -= (current - board[newX][newY])  # this is the formula I made up
     return ans
 def monotonyHeuristic(board):#make sure we go up in value as we go down and to the right
     ans=0
@@ -105,27 +108,53 @@ def monotonyHeuristic(board):#make sure we go up in value as we go down and to t
                 newY = y + 1
                 if newX < 4:  # make sure in bounds
                     if board[newX][y] < current:
-                        ans -= (current - board[newX][y]) * current
+                        ans -= (current - board[newX][y])**2
                 if newY < 4:
                     if board[x][newY] < current:
-                        ans -= (current - board[x][newY]) * current
+                        ans -= (current - board[x][newY])**2
     return ans
-print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board))
-
+def bigNumberHeuristic(board):
+    sumN = 0
+    for col in range(4):
+        for row in range(4):
+            sumN += board[row][col] ** 2
+    return sumN
+def biggestNum(board):
+    maxN = 0
+    for col in range(4):
+        for row in range(4):
+            maxN = max(maxN, board[row][col])
+    return maxN
+print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board), bigNumberHeuristic(example_board))
 def heuristicCombination(board):
-    e = emptyTilesHeuristic(board) * 100
-    s = smoothnessHeuristic(board) // 20
+    e = 16-emptyTilesHeuristic(board)
+    s = smoothnessHeuristic(board)
     m = monotonyHeuristic(board)
-    return -1*(e+s+m)
-
+    b = bigNumberHeuristic(board)
+    return -1*(e+s+m+b)
+def minimax2(node, depth, calcMini=True):
+    if depth == 0 or isTerminal(node):
+        return heuristicCombination(node)
+    if calcMini:
+        value = 0
+        children = miniOptions(node)
+        for child in children:
+            value += minimax2(child, depth - 1, not calcMini)
+        if len(children) == 0:
+            return MAX_INT
+        return value // len(children)
+    else:
+        value = MAX_INT
+        children = maxOptions(node)
+        for child in children:
+            value = min(value, minimax2(child, depth - 1, not calcMini))
+        return value
+def sortFirst(triple):
+    return triple[0]
 def bestMoveHeuristic(board, depth):
-    results = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]
-    min_loss = minimax(results[0], depth, loss_func=heuristicCombination)
-    min_loss_move = "CAN'T MAKE BEST MOVE"
-    for i in range(4):
-        curLoss = minimax(results[i], depth)
-        if results[i] != board and curLoss <= min_loss:
-            min_loss_move = moves[i]
-            min_loss = curLoss
-    return min_loss_move
+    results = [(minimax2(boards[x], depth), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
+print(bestMoveHeuristic(example_board, 0))

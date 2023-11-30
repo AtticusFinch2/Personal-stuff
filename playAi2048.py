@@ -22,8 +22,6 @@ bgColor = pygame.Color(245, 245, 220)
 @dataclass
 class Model:
     running: bool = True
-    grid_on: ... = field(default_factory=list)
-    mouse_pos: ... = (-10, -10)
 
 class ModelData:
     def __init__(
@@ -39,6 +37,7 @@ class ModelData:
         self.squareColor = [[pygame.color.Color(100,100,100) for x in range(rows)] for y in range(cols)]
         self.board = board
         self.click = False
+        self.Loss = 0
 
 
 
@@ -67,7 +66,7 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-        if ticker == 5:
+        if ticker == 1:
             movehandler(model)
             ticker =0
         else:
@@ -109,27 +108,25 @@ def generateRand(model):
     model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
 
 
+
 def movehandler(model):
-    #move = Ai2048.bestMoveHeuristic(model.board, 2)
-    move = Ai2048.bestMove(model.board)
-    move = Ai2048.bestMove(model.board)
+    moves = Ai2048.bestMoveHeuristic(model.board, 2)
+    #move = Ai2048.bestMove(model.board)
+    #move = Ai2048.bestMoveDepth(model.board,2)
     temp = model.board
-    match move:
-        case "up":
-            model.board = Logic2048.pushUp(model.board)
-        case "down":
-            model.board = Logic2048.pushDown(model.board)
-        case "right":
-            model.board = Logic2048.pushRight(model.board)
-        case "left":
-            model.board = Logic2048.pushLeft (model.board)
-    print(move)
+    for move in moves: # go through the moves and pick the first valid move
+        if model.board != move[1]:
+            model.board = move[1]
+            model.Loss = move[0]
+            print(move[2])
+            break
     if temp == model.board:
         if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
                 model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
                 model.board):
             print("GAME OVER")
         print("didNothing")
+        return
     generateRand(model)
 
 cfv = { # color from value
@@ -145,7 +142,10 @@ cfv = { # color from value
     1024: pygame.Color(237, 197, 63),
     2048: pygame.Color(237, 194, 46)
 }
-
+def getColorBox(n):
+    if n > 2048:
+        return pygame.Color(0, 0, 0)
+    return cfv[n]
 
 def bgDrawer(
     model,
@@ -164,15 +164,15 @@ def bgDrawer(
                 (topLeftX, topLeftY), (boxW - (2 * borderW)-1, boxH - (2 * borderW)-1),
             )
             if model.board[row][col] !=0:
-                pygame.draw.rect(model.screen, cfv[model.board[row][col]], theCell, 0, 0, boxradius,
+                pygame.draw.rect(model.screen, getColorBox(model.board[row][col]), theCell, 0, 0, boxradius,
                                  boxradius, boxradius, boxradius)
-                if model.board[row][col] > 99:
+                if model.board[row][col] < 2048:
                     text = (
-                        fontsmall.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                        fontbig.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
                     )
                 else:
                     text = (
-                        fontbig.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                        fontsmall.render(f"{model.board[row][col]}", False, pygame.Color(255, 255, 255))
                     )
                 textPos = text.get_rect(
                     center = (
@@ -184,10 +184,9 @@ def bgDrawer(
             else:
                 pygame.draw.rect(model.screen, bgColor, theCell, 0, 0, boxradius,boxradius,boxradius,boxradius)
 
-
 def drawLoss(model):
     text = (
-        fontsmall.render(f"{Ai2048.LossOf(model.board)}", False, pygame.Color(0, 0, 0))
+        fontsmall.render(f"{model.Loss}", False, pygame.Color(0, 0, 0))
     )
     textPos = text.get_rect(center =(400, 400))
     model.screen.blit(text, textPos)
