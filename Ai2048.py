@@ -4,10 +4,10 @@ scoreGrid = [[50,  30,  20,  20],
              [30,  20,  15,  15],
              [15,   5,   0,   0],
              [-5,  -5, -10, -15]]
-scoreGrid2 = [[4**15, 4**14, 4**13, 4**12],
-             [4**8,  4**9,  4**10, 4**11],
-             [4**7,  4**6,  4**5,  4**4],
-             [4**0,  4**1,  4**2,  4**3]]
+scoreGrid2 = [[4**16, 4**15, 4**14, 4**13],
+             [4**9,  4**10,  4**11, 4**12],
+             [4**8,  4**7,  4**6,  4**5],
+             [4**1,  4**2,  4**3,  4**4]]
 example_board = [[0,0,2,2] for x in range(4)]
 MAX_INT = 2**30
 def LossOf(board):
@@ -18,16 +18,11 @@ def LossOf(board):
     return value
 
 def bestMove(board):
-    results = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]
-    min_loss = LossOf(results[0])
-    min_loss_move = "CAN'T MAKE BEST MOVE"
-    for i in range(4):
-        curLoss = LossOf(results[i])
-        if results[i] != board and curLoss <= min_loss:
-            min_loss_move = moves[i]
-            min_loss = curLoss
-    return min_loss_move
+    results = [(LossOf(boards[x]), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
 def isTerminal(board):
     '''for y in board:
         for x in y:
@@ -45,10 +40,10 @@ def miniOptions(board):
                 zero_pool.append((x,y))
                 nz+=1
     ans = [copy.deepcopy(board) for x in range(nz)]#*2)]
-    for child in range(nz):
+    for child in range(0,nz,2):
         ans[child][zero_pool[child][0]][zero_pool[child][1]] = 2
-    '''for child in range(nz, nz*2):
-        ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4'''
+    #for child in range(nz, nz*2):
+    #    ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4
     return ans
 
 def maxOptions(board):
@@ -65,16 +60,11 @@ def minimax(node, depth, calcMini=True, loss_func=LossOf):
     return value
 
 def bestMoveDepth(board, depth):
-    results = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]
-    min_loss = minimax(results[0], depth)
-    min_loss_move = "CAN'T MAKE BEST MOVE"
-    for i in range(4):
-        curLoss = minimax(results[i], depth)
-        if results[i] != board and curLoss <= min_loss:
-            min_loss_move = moves[i]
-            min_loss = curLoss
-    return min_loss_move
+    results = [(minimax(boards[x], depth), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
 
 def emptyTilesHeuristic(board):#simply counting the empty tiles
     nz = 0
@@ -127,11 +117,11 @@ def biggestNum(board):
     return maxN
 #print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board), bigNumberHeuristic(example_board))
 def heuristicCombination(board):
-    e = 16-emptyTilesHeuristic(board)
-    s = smoothnessHeuristic(board)
+    #e = 16-emptyTilesHeuristic(board)
+    #s = smoothnessHeuristic(board)
     m = monotonyHeuristic(board)
     b = bigNumberHeuristic(board)
-    return -1*(e+s+m+b)
+    return -1*(m+b)
 def minimax2(node, depth, calcMini=True):
     if depth == 0 or isTerminal(node):
         return heuristicCombination(node)
