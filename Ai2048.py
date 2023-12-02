@@ -39,13 +39,24 @@ def miniOptions(board):
             if board[x][y] == 0:
                 zero_pool.append((x,y))
                 nz+=1
-    ans = [copy.deepcopy(board) for x in range(nz)]#*2)]
-    for child in range(0,nz,2):
+    ans = [copy.deepcopy(board) for x in range(nz*2)]
+    for child in range(0,nz):
         ans[child][zero_pool[child][0]][zero_pool[child][1]] = 2
-    #for child in range(nz, nz*2):
-    #    ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4
+    for child in range(nz, nz*2):
+        ans[child][zero_pool[child-nz][0]][zero_pool[child-nz][1]] = 4
     return ans
-
+def miniOptionsFast(board):
+    zero_pool = []
+    nz=0
+    for y in range(4):
+        for x in range(4):
+            if board[x][y] == 0:
+                zero_pool.append((x,y))
+                nz+=1
+    ans = [copy.deepcopy(board) for x in range(nz//2)]
+    for child in range(nz//2):
+        ans[child][zero_pool[child*2][0]][zero_pool[child*2][1]] = 2
+    return ans
 def maxOptions(board):
     return [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
 
@@ -148,3 +159,27 @@ def bestMoveHeuristic(board, depth):
     results.sort(key=sortFirst)
     return results
 #print(bestMoveHeuristic(example_board, 0))
+def bestMoveHeuristicFast(board, depth):
+    boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    moves = ["up", "down", "left", "right"]
+    results = [(minimax2Fast(boards[x], depth), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
+
+def minimax2Fast(node, depth, calcMini=True):
+    if depth == 0 or isTerminal(node):
+        return heuristicCombination(node)
+    if calcMini:
+        value = 0
+        children = miniOptionsFast(node)
+        for child in children:
+            value += minimax2(child, depth - 1, not calcMini)
+        if len(children) == 0:
+            return MAX_INT
+        return value // len(children)
+    else:
+        value = MAX_INT
+        children = maxOptions(node)
+        for child in children:
+            value = min(value, minimax2(child, depth - 1, not calcMini))
+        return value

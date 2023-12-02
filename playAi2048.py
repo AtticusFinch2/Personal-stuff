@@ -7,7 +7,7 @@ import Ai2048
 # window setup
 xScene = 800
 yScene = 800
-framerate = 165
+framerate = 400
 boxW = 200
 boxH = 200
 borderW = 5
