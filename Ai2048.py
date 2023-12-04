@@ -4,18 +4,20 @@ scoreGrid = [[50,  30,  20,  20],
              [30,  20,  15,  15],
              [15,   5,   0,   0],
              [-5,  -5, -10, -15]]
-scoreGrid2 = [[4**16, 4**15, 4**14, 4**13],
-             [4**9,  4**10,  4**11, 4**12],
-             [4**8,  4**7,  4**6,  4**5],
-             [4**1,  4**2,  4**3,  4**4]]
-example_board = [[0,0,2,2] for x in range(4)]
+scoreGrid2 = [[3**16, 3**15, 3**14, 3**13],
+             [3**9,  3**10,  3**11, 3**12],
+             [3**8,  3**7,  3**6,  3**5],
+             [3**1,  3**2,  3**3,  3**4]]
+example_board = [[0,0,2,2] for _ in range(4)]
 MAX_INT = 2**30
 def LossOf(board):
     value = 0
     for col in range(4):
         for row in range(4):
-            value += scoreGrid[col][row] * (board[col][row]**2)
+            value += scoreGrid2[col][row] * (board[col][row]**3)
     return value
+def sortFirst(triple):
+    return triple[0]
 
 def bestMove(board):
     boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
@@ -23,6 +25,15 @@ def bestMove(board):
     results = [(LossOf(boards[x]), boards[x], moves[x]) for x in range(4)]
     results.sort(key=sortFirst)
     return results
+def bestMove2DepthFake(board):
+    boards1 = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    boards2 = [[Logic2048.pushUp(b), Logic2048.pushDown(b), Logic2048.pushLeft(b), Logic2048.pushRight(b)] for b in boards1]
+    boards = boards2[0] + boards2[1] + boards2[2] + boards2[3]
+    moves = ["up" for _ in range(4)] + ["down" for _ in range(4)] + ["left"for _ in range(4)] + ["right"for _ in range(4)]
+    results = [(LossOf(boards[x]), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
+#print(bestMove2DepthFake(example_board))
 def isTerminal(board):
     '''for y in board:
         for x in y:
@@ -38,7 +49,7 @@ def miniOptions(board):
         for x in range(4):
             if board[x][y] == 0:
                 zero_pool.append((x,y))
-                nz+=1
+                nz += 1
     ans = [copy.deepcopy(board) for x in range(nz*2)]
     for child in range(0,nz):
         ans[child][zero_pool[child][0]][zero_pool[child][1]] = 2
@@ -150,8 +161,7 @@ def minimax2(node, depth, calcMini=True):
         for child in children:
             value = min(value, minimax2(child, depth - 1, not calcMini))
         return value
-def sortFirst(triple):
-    return triple[0]
+
 def bestMoveHeuristic(board, depth):
     boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]

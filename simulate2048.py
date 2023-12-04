@@ -59,3 +59,43 @@ x = doSimFast(10)
 print(x)
 print(f"average: {sum(x)/len(x)}")
 print((time.time()-var))'''
+def doSimDummyFast(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not Ai2048.isTerminal(board):
+            moves = Ai2048.bestMove(board)
+            #moves = Ai2048.bestMoveDepth(board,2)
+            #moves = Ai2048.bestMoveHeuristic(board, 2)
+            #moves = Ai2048.bestMoveHeuristicFast(board, 2)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+            #print(f"moves this game: {moveNum}, biggest num this game = {Ai2048.biggestNum(board)}")
+        endScores.append(Ai2048.biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores
+def doSim2(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not Ai2048.isTerminal(board):
+            #moves = Ai2048.bestMove(board)
+            moves = Ai2048.bestMoveDepth(board,2)
+            #moves = Ai2048.bestMoveHeuristic(board, 2)
+            moves = Ai2048.bestMoveHeuristicFast(board, 2)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+            #print(f"moves this game: {moveNum}, biggest num this game = {Ai2048.biggestNum(board)}")
+        endScores.append(Ai2048.biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores

@@ -7,7 +7,7 @@ import Ai2048
 # window setup
 xScene = 800
 yScene = 800
-framerate = 400
+framerate = 144
 boxW = 200
 boxH = 200
 borderW = 5
@@ -66,7 +66,7 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-        if ticker == 0: #increase to slow it down
+        if ticker == 15: #increase to slow it down
             movehandler(model)
             ticker =0
         else:
@@ -111,8 +111,8 @@ def generateRand(model):
 
 def movehandler(model):
     moves = Ai2048.bestMoveHeuristic(model.board, 2)
-    #move = Ai2048.bestMove(model.board)
-    #move = Ai2048.bestMoveDepth(model.board,2)
+    #moves = Ai2048.bestMove2DepthFake(model.board)
+    #moves = Ai2048.bestMoveDepth(model.board,2)
     temp = model.board
     for move in moves:  # go through the moves and pick the first valid move
         if model.board != move[1]:
