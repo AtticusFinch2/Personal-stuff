@@ -1,5 +1,4 @@
 import pygame
-import random
 from collections import defaultdict
 from collections import deque
 from dataclasses import dataclass, field

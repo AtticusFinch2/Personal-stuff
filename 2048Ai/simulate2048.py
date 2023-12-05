@@ -1,7 +1,6 @@
-import Logic2048
 import random
 import Ai2048
-import time
+
 generatable_tiles = [2,2,2,2,2,2,2,2,2,4]
 def generateRand(board):
     zeroes = []
@@ -86,7 +85,7 @@ def doSim2(n):
         board = generateRand([[0,0,0,0] for x in range(4)])
         while not Ai2048.isTerminal(board):
             #moves = Ai2048.bestMove(board)
-            moves = Ai2048.bestMoveDepth(board,2)
+            moves = Ai2048.bestMoveDepth(board, 2)
             #moves = Ai2048.bestMoveHeuristic(board, 2)
             moves = Ai2048.bestMoveHeuristicFast(board, 2)
             for move in moves:  # go through the moves and pick the first valid move

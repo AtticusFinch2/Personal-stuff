@@ -1,4 +1,4 @@
-import dfsBrady
+from graphSolver import dfsBrady
 
 
 def make_grid(width: int, height: int):

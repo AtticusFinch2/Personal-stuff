@@ -1,13 +1,13 @@
 import pygame
 import Logic2048
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import Ai2048
 
 # window setup
 xScene = 800
 yScene = 800
-framerate = 15
+framerate = 144
 boxW = 200
 boxH = 200
 borderW = 5
@@ -37,6 +37,7 @@ class ModelData:
         self.squareColor = [[pygame.color.Color(100,100,100) for x in range(rows)] for y in range(cols)]
         self.board = board
         self.click = False
+        self.Loss = 0
 
 
 
@@ -51,6 +52,7 @@ def main():
     fontbig = pygame.font.Font(None, 150)
     fontsmall = pygame.font.Font(None, 100)
     dt = 0
+    ticker=0
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -64,17 +66,17 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-            if event.type == pygame.KEYDOWN:
-                doNotUse = keyhandler(keys, model)
-                print(doNotUse)
-                if doNotUse == "GAME OVER":
-                    running = False
+        if ticker == 15: #increase to slow it down
+            movehandler(model)
+            ticker =0
+        else:
+            ticker+=1
         # fill the screen with a color to wipe away anything from last frame
         model.screen.fill("purple")
         (model.x, model.y) = pygame.mouse.get_pos()
 
         bgDrawer(model)
-        #drawLoss(model)
+        drawLoss(model)
         # drawUI(col, row, model)
 
         # flip() the display to put your work on screen
@@ -87,7 +89,7 @@ def main():
         dt = clock.tick(framerate) / 1000
 
     pygame.quit()
-generatable_tiles = [2,2,2,4] #amount proportional to weight
+generatable_tiles = [2,2,2,2,2,2,2,2,2,4] #amount proportional to weight
 def generateRand(model):
     zeroes = []
     for col in range(4):
@@ -103,27 +105,28 @@ def generateRand(model):
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 9)]
 
 
-def keyhandler(keys, model):
+
+def movehandler(model):
+    moves = Ai2048.bestMoveHeuristic(model.board, 2)
+    #moves = Ai2048.bestMove2DepthFake(model.board)
+    #moves = Ai2048.bestMoveDepth(model.board,2)
     temp = model.board
-    if keys[pygame.K_UP]:
-        model.board = Logic2048.pushUp(model.board)
-    elif keys[pygame.K_DOWN]:
-        model.board = Logic2048.pushDown(model.board)
-    elif keys[pygame.K_RIGHT]:
-        model.board = Logic2048.pushRight(model.board)
-    elif keys[pygame.K_LEFT]:
-        model.board = Logic2048.pushLeft(model.board)
-    else:
-        return "NO KEY"
+    for move in moves:  # go through the moves and pick the first valid move
+        if model.board != move[1]:
+            model.board = move[1]
+            model.Loss = move[0]
+            print(move[2])
+            break
     if temp == model.board:
         if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
                 model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
                 model.board):
-            return "GAME OVER"
-        return "didNothing"
+            print("GAME OVER")
+        print("didNothing")
+        return
     generateRand(model)
 
 cfv = { # color from value
@@ -139,7 +142,10 @@ cfv = { # color from value
     1024: pygame.Color(237, 197, 63),
     2048: pygame.Color(237, 194, 46)
 }
-
+def getColorBox(n):
+    if n > 2048:
+        return pygame.Color(0, 0, 0)
+    return cfv[n]
 
 def bgDrawer(
     model,
@@ -158,15 +164,19 @@ def bgDrawer(
                 (topLeftX, topLeftY), (boxW - (2 * borderW)-1, boxH - (2 * borderW)-1),
             )
             if model.board[row][col] !=0:
-                pygame.draw.rect(model.screen, cfv[model.board[row][col]], theCell, 0, 0, boxradius,
+                pygame.draw.rect(model.screen, getColorBox(model.board[row][col]), theCell, 0, 0, boxradius,
                                  boxradius, boxradius, boxradius)
-                if model.board[row][col] > 99:
+                if model.board[row][col] < 99:
+                    text = (
+                        fontbig.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                    )
+                elif model.board[row][col] <= 2048:
                     text = (
                         fontsmall.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
                     )
                 else:
                     text = (
-                        fontbig.render(f"{model.board[row][col]}", False, pygame.Color(0, 0, 0))
+                        fontsmall.render(f"{model.board[row][col]}", False, pygame.Color(255, 255, 255))
                     )
                 textPos = text.get_rect(
                     center = (
@@ -178,10 +188,9 @@ def bgDrawer(
             else:
                 pygame.draw.rect(model.screen, bgColor, theCell, 0, 0, boxradius,boxradius,boxradius,boxradius)
 
-
 def drawLoss(model):
     text = (
-        fontsmall.render(f"{Ai2048.LossOf(model.board)}", False, pygame.Color(0, 0, 0))
+        fontsmall.render(f"{model.Loss}", False, pygame.Color(0, 0, 0))
     )
     textPos = text.get_rect(center =(400, 400))
     model.screen.blit(text, textPos)

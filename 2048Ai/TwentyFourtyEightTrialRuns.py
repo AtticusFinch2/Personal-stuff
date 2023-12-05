@@ -1,4 +1,3 @@
-import random
 import time
 import simulate2048
 
