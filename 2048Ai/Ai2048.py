@@ -1,5 +1,7 @@
 import Logic2048
 import copy
+import time
+
 scoreGrid = [[50,  30,  20,  20],
              [30,  20,  15,  15],
              [15,   5,   0,   0],
@@ -193,3 +195,108 @@ def minimax2Fast(node, depth, calcMini=True):
         for child in children:
             value = min(value, minimax2(child, depth - 1, not calcMini))
         return value
+
+import random
+
+generatable_tiles = [2,2,2,2,2,2,2,2,2,4]
+def generateRand(board):
+    zeroes = []
+    for col in range(4):
+        for row in range(4):
+            if board[row][col] == 0:
+                zeroes.append((row, col))
+    numOfZeros = len(zeroes)
+    if numOfZeros == 0:
+        return board
+    spawned = random.randrange(0, numOfZeros)
+    (zx, zy) = zeroes[spawned]
+    board[zx][zy] = generatable_tiles[random.randrange(0, 9)]
+    return board
+
+def doSim(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not isTerminal(board):
+            moves = bestMoveHeuristic(board, 2)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+        endScores.append(biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores
+def doSimFast(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not isTerminal(board):
+            moves = bestMoveHeuristicFast(board, 2)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+        endScores.append(biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores
+def doSimDummyFast(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not isTerminal(board):
+            moves = bestMove(board)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+        endScores.append(biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores
+def doSim2(n):
+    endScores = []
+    for gameNum in range(n):
+        moveNum =0
+        board = generateRand([[0,0,0,0] for x in range(4)])
+        while not isTerminal(board):
+            moves = bestMoveDepth(board, 2)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+        endScores.append(biggestNum(board))
+        #print(endScores[gameNum])
+    return endScores
+myname = "BradenMiller"
+def run_your_solver(version=3):
+    match version:
+        case 4:
+            return doSimFast(1)[0]  # fast-ish but kinda bad
+        case 3:
+            return doSim(1)[0]  # Slowest but highest average score (use n=15)
+        case 2:
+            return doSim2(1)[0]  # minimax but with pretty bad weights
+        case 1:
+            return doSimDummyFast(1)[0]  # fast but stupid (n=2000)
+def runtrials(n=15):
+    for _ in range(n):
+        starttime = time.time()
+        maxtile = run_your_solver(3)
+        endtime = time.time()
+        runtime = endtime-starttime
+        print(f'"REPORT","{myname}",{runtime},{maxtile}')
+starttime2 = time.time()
+if __name__ == '__main__':
+    runtrials()
+endtime2 = time.time()
+print(endtime2-starttime2)

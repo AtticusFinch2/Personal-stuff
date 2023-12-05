@@ -53,11 +53,6 @@ def doSimFast(n):
         endScores.append(Ai2048.biggestNum(board))
         #print(endScores[gameNum])
     return endScores
-'''var = time.time()
-x = doSimFast(10)
-print(x)
-print(f"average: {sum(x)/len(x)}")
-print((time.time()-var))'''
 def doSimDummyFast(n):
     endScores = []
     for gameNum in range(n):
