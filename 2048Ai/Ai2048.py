@@ -1,6 +1,7 @@
 import Logic2048
 import copy
 import time
+import random
 
 scoreGrid = [[50,  30,  20,  20],
              [30,  20,  15,  15],
@@ -196,7 +197,6 @@ def minimax2Fast(node, depth, calcMini=True):
             value = min(value, minimax2(child, depth - 1, not calcMini))
         return value
 
-import random
 
 generatable_tiles = [2,2,2,2,2,2,2,2,2,4]
 def generateRand(board):
@@ -210,7 +210,7 @@ def generateRand(board):
         return board
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    board[zx][zy] = generatable_tiles[random.randrange(0, 9)]
+    board[zx][zy] = generatable_tiles[random.randrange(0, 10)]
     return board
 
 def doSim(n):
@@ -277,6 +277,40 @@ def doSim2(n):
         endScores.append(biggestNum(board))
         #print(endScores[gameNum])
     return endScores
+
+
+def advancedStratOneIter(b): # board -> board after 100 random moves
+    board = copy.deepcopy(b)
+    for _ in range(100):
+        board = generateRand(board)
+        if not isTerminal(board):
+            possibleMoveDirs = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+            board = possibleMoveDirs[random.randrange(0, 4)]
+        else:
+            return board
+    return board
+def advancedStratValueOfMove(board):
+    resultAll = 0
+    for _ in range(100):
+        result1 = heuristicCombination(advancedStratOneIter(board))
+        resultAll += result1
+    return resultAll / 100
+def bestMoveAdvanced(board, depth):
+    boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
+    moves = ["up", "down", "left", "right"]
+    results = [(advancedStratValueOfMove(boards[x]), boards[x], moves[x]) for x in range(4)]
+    results.sort(key=sortFirst)
+    return results
+
+
+
+
+
+
+
+
+
+
 myname = "BradenMiller"
 def run_your_solver(version=3):
     match version:
