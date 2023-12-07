@@ -87,7 +87,7 @@ def main():
         dt = clock.tick(framerate) / 1000
 
     pygame.quit()
-generatable_tiles = [2,2,2,4] #amount proportional to weight
+generatable_tiles = [2,2,2,2,2,2,2,2,2,4] #amount proportional to weight
 def generateRand(model):
     zeroes = []
     for col in range(4):
@@ -96,14 +96,12 @@ def generateRand(model):
                 zeroes.append((row, col))
     numOfZeros = len(zeroes)
     if numOfZeros == 0:
-        if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
-                model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
-                model.board):
+        if Logic2048.isTerminal(model.board):
             return "GAME OVER"
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = generatable_tiles[random.randrange(0, 3)]
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 10)]
 
 
 def keyhandler(keys, model):
@@ -124,7 +122,7 @@ def keyhandler(keys, model):
                 model.board):
             return "GAME OVER"
         return "didNothing"
-    generateRand(model)
+    model.board = Logic2048.generateRand(model.board)
 
 cfv = { # color from value
     2: pygame.Color(238, 228, 218),

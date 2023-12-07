@@ -66,7 +66,7 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_q]:
                 running = False
-        if ticker == 15: #increase to slow it down
+        if ticker == 0: #increase to slow it down
             movehandler(model)
             ticker =0
         else:
@@ -98,19 +98,18 @@ def generateRand(model):
                 zeroes.append((row, col))
     numOfZeros = len(zeroes)
     if numOfZeros == 0:
-        if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
-                model.board) == Logic2048.pushLeft(model.board) and Logic2048.pushLeft(model.board) == Logic2048.pushUp(
-                model.board):
+        if Logic2048.isTerminal(model.board):
             return "GAME OVER"
         return "NO SPACES"
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    model.board[zx][zy] = generatable_tiles[random.randrange(0, 9)]
+    model.board[zx][zy] = generatable_tiles[random.randrange(0, 10)]
 
 
 
 def movehandler(model):
-    moves = Ai2048.bestMoveHeuristic(model.board, 2)
+    curDepth = 2#max((16-Ai2048.emptyTilesHeuristic(model.board))//3, 2)
+    moves = Ai2048.bestMoveHeuristic(model.board, curDepth)
     #moves = Ai2048.bestMove2DepthFake(model.board)
     #moves = Ai2048.bestMoveDepth(model.board,2)
     temp = model.board
@@ -118,7 +117,7 @@ def movehandler(model):
         if model.board != move[1]:
             model.board = move[1]
             model.Loss = move[0]
-            print(move[2])
+            print(move[2], curDepth)
             break
     if temp == model.board:
         if Logic2048.pushUp(model.board) == Logic2048.pushDown(model.board) and Logic2048.pushRight(
@@ -127,7 +126,7 @@ def movehandler(model):
             print("GAME OVER")
         print("didNothing")
         return
-    generateRand(model)
+    model.board = Logic2048.generateRand(model.board)
 
 cfv = { # color from value
     2: pygame.Color(238, 228, 218),

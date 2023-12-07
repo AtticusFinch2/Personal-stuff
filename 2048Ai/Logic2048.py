@@ -3,6 +3,7 @@
 # O(n^3) but nobody cares because n is 4 so its only 64 comparisons
 TestCase = [[2, 2, 4, 4], [0, 2, 0, 2], [4, 0, 2, 4], [0, 0, 0, 2]]
 import copy
+import random
 
 def pushLeftRow(row1):
     row = copy.deepcopy(row1)
@@ -42,20 +43,43 @@ def pushRightRow(row1):
     return ans
 
 
+
+
+def generateLUTleft():
+    lut = {}
+    def p(n):
+        return 0 if n==0 else 2**n
+    for a in range(14):
+        for b in range(14):
+            for c in range(14):
+                for d in range(14):
+                    lut[f"{p(a)}{p(b)}{p(c)}{p(d)}"] = pushLeftRow([p(a),p(b),p(c),p(d)])
+    return lut
+def generateLUTright():
+    lut = {}
+    def p(n):
+        return 0 if n==0 else 2**n
+    for a in range(14):
+        for b in range(14):
+            for c in range(14):
+                for d in range(14):
+                    lut[f"{p(a)}{p(b)}{p(c)}{p(d)}"] = pushRightRow([p(a),p(b),p(c),p(d)])
+    return lut
+lut_left = generateLUTleft()
+lut_right = generateLUTright()
+#ex_board = [[0,2,2,4] for _ in range(4)]
 def pushRight(board):
-    ans = [[0, 0, 0, 0] for x in range(4)]
-    for row in range(4):
-        ans[row] = pushRightRow(board[row])
-    return ans
-
-
+    ns = [[] for _ in range(4)]
+    for r in range(4):
+        row = board[r]
+        ns[r] = lut_right[f"{row[0]}{row[1]}{row[2]}{row[3]}"]
+    return ns
 def pushLeft(board):
-    ans = [[0, 0, 0, 0] for x in range(4)]
-    for row in range(4):
-        ans[row] = pushLeftRow(board[row])
-    return ans
-
-
+    ns = [[] for _ in range(4)]
+    for r in range(4):
+        row = board[r]
+        ns[r] = lut_left[f"{row[0]}{row[1]}{row[2]}{row[3]}"]
+    return ns
 def transposeSquare(twoDarr):
     ans = [[0, 0, 0, 0] for x in range(4)]
     for row in range(4):
@@ -65,7 +89,6 @@ def transposeSquare(twoDarr):
 
 
 def pushUp(board):
-    ans = [[0, 0, 0, 0] for x in range(4)]
     tp = transposeSquare(board)
     ans = pushLeft(tp)
     ans = transposeSquare(ans)
@@ -73,10 +96,29 @@ def pushUp(board):
 
 
 def pushDown(board):
-    ans = [[0, 0, 0, 0] for x in range(4)]
     tp = transposeSquare(board)
     ans = pushRight(tp)
     ans = transposeSquare(ans)
     return ans
 
-#print(pushDown(TestCase))
+def isTerminal(board):
+    if pushRight(board) == pushLeft(board) and pushUp(board) == pushDown(board):
+        return True
+    return False
+
+generatable_tiles = [2,2,2,2,2,2,2,2,2,4]
+def generateRand(board):
+    zeroes = []
+    for col in range(4):
+        for row in range(4):
+            if board[row][col] == 0:
+                zeroes.append((row, col))
+    numOfZeros = len(zeroes)
+    if numOfZeros == 0:
+        return board
+    spawned = random.randrange(0, numOfZeros)
+    (zx, zy) = zeroes[spawned]
+    b = copy.deepcopy(board)
+    b[zx][zy] = generatable_tiles[random.randrange(0, 10)]
+    return b
+

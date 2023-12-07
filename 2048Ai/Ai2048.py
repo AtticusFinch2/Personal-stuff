@@ -142,22 +142,28 @@ def biggestNum(board):
     return maxN
 #print(emptyTilesHeuristic(example_board), smoothnessHeuristic(example_board), monotonyHeuristic(example_board), bigNumberHeuristic(example_board))
 def heuristicCombination(board):
-    #e = 16-emptyTilesHeuristic(board)
+    e = 16-emptyTilesHeuristic(board)
     #s = smoothnessHeuristic(board)
     m = monotonyHeuristic(board)
     b = bigNumberHeuristic(board)
-    return -1*(m+b)
+    return -1*(e+m+b)
 def minimax2(node, depth, calcMini=True):
     if depth == 0 or isTerminal(node):
         return heuristicCombination(node)
     if calcMini:
         value = 0
         children = miniOptions(node)
-        for child in children:
-            value += minimax2(child, depth - 1, not calcMini)
-        if len(children) == 0:
+        nC = len(children)  # num of Children
+        if nC == 0:
             return MAX_INT
-        return value // len(children)
+        for c in range(nC//2):
+            value += minimax2(children[c], depth - 1, not calcMini)
+        v1 = value // nC // 2
+        value = 0
+        for c in range(nC//2, nC):
+            value += minimax2(children[c], depth - 1, not calcMini)
+        v2 = value // nC // 2
+        return ((v1*9) + v2) // 10
     else:
         value = MAX_INT
         children = maxOptions(node)
@@ -168,7 +174,10 @@ def minimax2(node, depth, calcMini=True):
 def bestMoveHeuristic(board, depth):
     boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]
+    #print(boards)
     results = [(minimax2(boards[x], depth), boards[x], moves[x]) for x in range(4)]
+    #print(board)
+    #print(results)
     results.sort(key=sortFirst)
     return results
 #print(bestMoveHeuristic(example_board, 0))
@@ -210,24 +219,25 @@ def generateRand(board):
         return board
     spawned = random.randrange(0, numOfZeros)
     (zx, zy) = zeroes[spawned]
-    board[zx][zy] = generatable_tiles[random.randrange(0, 10)]
-    return board
+    b = copy.deepcopy(board)
+    b[zx][zy] = generatable_tiles[random.randrange(0, 10)]
+    return b
 
 def doSim(n):
     endScores = []
-    for gameNum in range(n):
-        moveNum =0
-        board = generateRand([[0,0,0,0] for x in range(4)])
-        while not isTerminal(board):
-            moves = bestMoveHeuristic(board, 2)
-            for move in moves:  # go through the moves and pick the first valid move
-                if board != move[1]:
-                    board = move[1]
-                    break
-            board = generateRand(board)
-            moveNum += 1
-        endScores.append(biggestNum(board))
-        #print(endScores[gameNum])
+    moveNum =0
+    board = generateRand([[0,0,0,0] for x in range(4)])
+    while not isTerminal(board):
+        moves = bestMoveHeuristic(board, 2)
+        #print(board)
+        for move in moves:  # go through the moves and pick the first valid move
+            if board != move[1]:
+                board = move[1]
+                break
+        board = generateRand(board)
+        moveNum += 1
+    endScores.append(biggestNum(board))
+    #print(board)
     return endScores
 def doSimFast(n):
     endScores = []
@@ -279,9 +289,8 @@ def doSim2(n):
     return endScores
 
 
-def advancedStratOneIter(b): # board -> board after 100 random moves
-    board = copy.deepcopy(b)
-    for _ in range(100):
+def advancedStratOneIter(board):  # board -> board after x random moves
+    for _ in range(30):  # x is here
         board = generateRand(board)
         if not isTerminal(board):
             possibleMoveDirs = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
@@ -291,17 +300,32 @@ def advancedStratOneIter(b): # board -> board after 100 random moves
     return board
 def advancedStratValueOfMove(board):
     resultAll = 0
-    for _ in range(100):
-        result1 = heuristicCombination(advancedStratOneIter(board))
-        resultAll += result1
+    b= copy.deepcopy(board)
+    for _ in range(30):
+        resultAll += heuristicCombination(advancedStratOneIter(b))
+        b = board
     return resultAll / 100
-def bestMoveAdvanced(board, depth):
+def bestMoveAdvanced(board):
     boards = [Logic2048.pushUp(board), Logic2048.pushDown(board), Logic2048.pushLeft(board), Logic2048.pushRight(board)]
     moves = ["up", "down", "left", "right"]
     results = [(advancedStratValueOfMove(boards[x]), boards[x], moves[x]) for x in range(4)]
     results.sort(key=sortFirst)
     return results
-
+def doSimAdvanced(n):
+    endScores = []
+    for _ in range(n):
+        moveNum = 0
+        board = generateRand([[0, 0, 0, 0] for x in range(4)])
+        while not isTerminal(board):
+            moves = bestMoveAdvanced(board)
+            for move in moves:  # go through the moves and pick the first valid move
+                if board != move[1]:
+                    board = move[1]
+                    break
+            board = generateRand(board)
+            moveNum += 1
+        endScores.append(biggestNum(board))
+    return endScores
 
 
 
@@ -314,6 +338,8 @@ def bestMoveAdvanced(board, depth):
 myname = "BradenMiller"
 def run_your_solver(version=3):
     match version:
+        case 5:
+            return doSimAdvanced(1)[0]  # new method IS REALLLLY SLOW AND REALLLLY BAD
         case 4:
             return doSimFast(1)[0]  # fast-ish but kinda bad
         case 3:
@@ -322,7 +348,7 @@ def run_your_solver(version=3):
             return doSim2(1)[0]  # minimax but with pretty bad weights
         case 1:
             return doSimDummyFast(1)[0]  # fast but stupid (n=2000)
-def runtrials(n=15):
+def runtrials(n=50):
     for _ in range(n):
         starttime = time.time()
         maxtile = run_your_solver(3)
@@ -331,6 +357,12 @@ def runtrials(n=15):
         print(f'"REPORT","{myname}",{runtime},{maxtile}')
 starttime2 = time.time()
 if __name__ == '__main__':
-    runtrials()
+    import cProfile
+    with (cProfile.Profile() as pr):
+        pr.enable()
+        runtrials()
+        pr.disable()
+        pr.print_stats()
 endtime2 = time.time()
 print(endtime2-starttime2)
+#print(bestMoveHeuristic([[0, 0, 2, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], 2))
