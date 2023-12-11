@@ -2,12 +2,13 @@
 using namespace std;
 
 int main() {
+    cout<<"HI"<<endl;
 	ifstream file( "sample.txt" );
 	string line;
 	while(getline( file, line ) )   
     {
         istringstream iss( line );
-        cout<<"HI"<<endl;
+        
         string result;
         if(getline( iss, result , ':') )
         {
@@ -22,3 +23,4 @@ int main() {
 		}
 	}
 }
+main();
