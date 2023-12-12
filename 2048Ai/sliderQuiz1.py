@@ -219,7 +219,7 @@ def keyhandler(keys, model):
         return "didNothing"
     #print(model.board)
     generateRand(model)
-    print(model.board)
+    #print(model.board)
 
 
 cfv = { # color from value
