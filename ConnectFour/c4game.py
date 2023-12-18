@@ -2,6 +2,7 @@ import pygame
 import c4logic
 import numpy as np
 import time
+import cProfile
 from dataclasses import dataclass
 
 # window setup
@@ -39,6 +40,7 @@ class ModelData:
         self.hoverSq = (-1, -1)
         self.player = 1
         self.ai_on = True
+        self.taken = 10
 
 
 def main():
@@ -149,6 +151,7 @@ cfw = {1:"Red", 2:"Yellow"}  # color from winner
 def drawWinner(model):
     winner = c4logic.wins(model.board)
     if winner > 0:
+        print(model.board)
         topLeft = (0, 0)
         theCell = pygame.Rect(
             topLeft, (model.screen.get_width(), model.screen.get_height())
@@ -163,11 +166,17 @@ def drawWinner(model):
 
 def ai_handler(model):
     if model.ai_on:
-        start_time = time.time()
-        moves = c4logic.best_move(model.board, model.player, 5)
-        model.board = moves[0][2]
-        end_time = time.time()
-        print(f"Ai's Move: Column moved = {moves[0][1]}, ", f"Loss: {moves[0][0]}", f", Time taken on this move:{end_time-start_time}")
+        with (cProfile.Profile() as pr):
+            pr.enable()
+            start_time = time.time()
+            moves = c4logic.best_move(model.board, model.player, 5)
+            model.board = moves[0][2]
+            end_time = time.time()
+            model.taken = end_time - start_time
+            print(
+                f"Ai's Move: Column moved = {moves[0][1]}, Loss: {moves[0][0]}, Time taken on this move:{model.taken}")
+            pr.disable()
+            pr.print_stats()
         model.player = flip(model.player)
 
 
