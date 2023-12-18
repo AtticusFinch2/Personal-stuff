@@ -7,7 +7,7 @@ from dataclasses import dataclass
 # window setup
 xScene = 700
 yScene = 600
-framerate = 15
+framerate = 60
 cols = 7
 rows = 6
 boxW = int(xScene / cols)
@@ -73,13 +73,13 @@ def main():
 
         drawHandler(model)
         drawWinner(model)
+        # flip() the display to put your work on screen
+        pygame.display.flip()
         if ticker >= 5 and model.player == 2: #increase to slow it down
             ai_handler(model)
             ticker = 0
         else:
             ticker += 1
-        # flip() the display to put your work on screen
-        pygame.display.flip()
 
         # limits FPS to 60
         # dt is delta time in seconds since last frame, used for framerate-
@@ -167,7 +167,7 @@ def ai_handler(model):
         moves = c4logic.best_move(model.board, model.player, 5)
         model.board = moves[0][2]
         end_time = time.time()
-        print(f"Ai's Move: Column moved = {moves[0][1]}, ", f"Loss: {moves[0][0]}", f", Time taken on this move:{start_time-end_time}")
+        print(f"Ai's Move: Column moved = {moves[0][1]}, ", f"Loss: {moves[0][0]}", f", Time taken on this move:{end_time-start_time}")
         model.player = flip(model.player)
 
 

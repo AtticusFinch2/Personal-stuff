@@ -137,7 +137,7 @@ switch = {1:2, 2:1, 0:0}
 
 
 def evaluation_row(n):  # TODO THIS IS WHAT YOU DO TO THE NUM OF THINGS
-    return n**5
+    return n**6
 
 
 def static_value(board, player):
@@ -147,8 +147,8 @@ def static_value(board, player):
             a = [board[row, col], board[row, col + 1], board[row, col + 2], board[row, col + 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
-            if p2>0 and p1==0:
-                ans -= evaluation_row(p2)
+            if p2>0 and p1==0: #if enemy row detected
+                ans -= (evaluation_row(p2) ** 3)
             elif p2>0:
                 ans = ans
             else:
@@ -160,7 +160,7 @@ def static_value(board, player):
             p1 = a.count(player)
             p2 = a.count(switch[player])
             if p2 > 0 and p1 == 0:
-                ans -= evaluation_row(p2)
+                ans -= (evaluation_row(p2) ** 3)
             elif p2 > 0:
                 ans = ans
             else:
@@ -172,7 +172,7 @@ def static_value(board, player):
             p1 = a.count(player)
             p2 = a.count(switch[player])
             if p2 > 0 and p1 == 0:
-                ans -= evaluation_row(p2)
+                ans -= (evaluation_row(p2) ** 3)
             elif p2 > 0:
                 ans = ans
             else:
@@ -185,7 +185,7 @@ def static_value(board, player):
             p1 = a.count(player)
             p2 = a.count(switch[player])
             if p2 > 0 and p1 == 0:
-                ans -= evaluation_row(p2)
+                ans -= (evaluation_row(p2) ** 3)
             elif p2 > 0:
                 ans = ans
             else:
@@ -203,20 +203,19 @@ def convert(player):
     else:
         return 2
 
+adjust = {1:1, 2:-1, 0:0}
 def minimax(node, depth, player):
     if depth == 0:
-        return static_value(node, player)
+        return static_value(node, player) * adjust[player]
     winner = wins(node)
     if winner != 0:
-        return (winner - 1.5) * 10000
-    value = int(MAX_INT) if player==2 else int(-1 * MAX_INT)
+        return static_value(node, player) * adjust[player] + ((adjust[winner] * 4) ** 6) ** 3  # just doing the math that we would otherwise do in static_value
+    value = int(MAX_INT) if player == 2 else int(-1 * MAX_INT)
     children = [np.array(placeMove(node, col, player)) for col in range(node.shape[1]) if node[col][0] == 0]
     for child in children:
         x = minimax(child, depth - 1, switch[player])
-        value = min(value, x) if player==2 else max(value, x)
-    #print(value)
+        value = min(value, x) if player == 2 else max(value, x)
     return value
-
 
 
 
@@ -227,9 +226,12 @@ def sortFirst(triple):
 def best_move(board, player, depth): #returns value of each move
     moves = []
     for move in range(board.shape[1]):
-        new_board = placeMove(board, move, player)
-        moves.append((minimax(new_board,depth,player), move, new_board))
-    moves.sort(key = sortFirst)
+        placement = placeMoveFast(board, move)
+        new_board = copy.deepcopy(board)
+        new_board[placement[0]][placement[1]] = player
+        if placement[1] != -1:
+            moves.append((minimax(new_board,depth,switch[player]), move, new_board))
+    moves.sort(key=sortFirst)
     return moves
 #print(best_move(board_ex, 1, 5))
 
