@@ -1,6 +1,7 @@
 import pygame
 import c4logic
 import numpy as np
+import time
 from dataclasses import dataclass
 
 # window setup
@@ -37,6 +38,7 @@ class ModelData:
         self.click = False
         self.hoverSq = (-1, -1)
         self.player = 1
+        self.ai_on = True
 
 
 def main():
@@ -44,7 +46,7 @@ def main():
     model = ModelData()
     clock = pygame.time.Clock()
     running = True
-    dt = 0
+    ticker = 0
     global fontbig, fontsmall
     fontbig = pygame.font.Font(None, 150)
     fontsmall = pygame.font.Font(None, 100)
@@ -71,7 +73,11 @@ def main():
 
         drawHandler(model)
         drawWinner(model)
-
+        if ticker >= 5 and model.player == 2: #increase to slow it down
+            ai_handler(model)
+            ticker = 0
+        else:
+            ticker += 1
         # flip() the display to put your work on screen
         pygame.display.flip()
 
@@ -102,9 +108,9 @@ def flip(player):
 
 
 def movehandler(model):
-    move = c4logic.placeMoveFast(model.board, model.hoverSq[0], model.player)
+    move = c4logic.placeMoveFast(model.board, model.hoverSq[0])
     if move[0] != -1:
-        print(move)
+        print(f"You played {move}")
         model.board[move[0]][move[1]] = model.player
         model.player = flip(model.player)
 
@@ -127,7 +133,7 @@ def drawHandler(model):
                 ((boxW * c + (boxW / 2)), (boxW * r + (boxW / 2))),
                 boxW // 2.5,
             )
-    move = c4logic.placeMoveFast(model.board, model.hoverSq[0], model.player)
+    move = c4logic.placeMoveFast(model.board, model.hoverSq[0])
     pygame.draw.circle(
         model.screen,
         cfv[model.player+2],
@@ -138,7 +144,8 @@ def drawHandler(model):
         boxW // 2.5,
     )
 
-cfw = {1:"Red", 2:"Yellow"}
+
+cfw = {1:"Red", 2:"Yellow"}  # color from winner
 def drawWinner(model):
     winner = c4logic.wins(model.board)
     if winner > 0:
@@ -152,6 +159,17 @@ def drawWinner(model):
         )
         textPos = text.get_rect(center=(xScene / 2, yScene / 2))
         model.screen.blit(text, textPos)
+
+
+def ai_handler(model):
+    if model.ai_on:
+        start_time = time.time()
+        moves = c4logic.best_move(model.board, model.player, 5)
+        model.board = moves[0][2]
+        end_time = time.time()
+        print(f"Ai's Move: Column moved = {moves[0][1]}, ", f"Loss: {moves[0][0]}", f", Time taken on this move:{start_time-end_time}")
+        model.player = flip(model.player)
+
 
 
 main()
