@@ -166,19 +166,13 @@ def drawWinner(model):
 
 def ai_handler(model):
     if model.ai_on:
-        with (cProfile.Profile() as pr):
-            pr.enable()
-            start_time = time.time()
-            moves = c4logic.best_move(model.board, model.player, 5)
-            model.board = moves[0][2]
-            end_time = time.time()
-            model.taken = end_time - start_time
-            print(
-                f"Ai's Move: Column moved = {moves[0][1]}, Loss: {moves[0][0]}, Time taken on this move:{model.taken}")
-            pr.disable()
-            pr.print_stats()
+        start_time = time.time()
+        move = c4logic.best_move(model.board, model.player, 5)
+        model.board = move[2]
+        end_time = time.time()
+        model.taken = end_time - start_time
+        print(f"Ai's Move: Column moved = {move[1]}, Loss: {move[0]}, Time taken on this move:{model.taken}")
         model.player = flip(model.player)
-
 
 
 main()

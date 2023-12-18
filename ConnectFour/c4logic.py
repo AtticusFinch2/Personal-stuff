@@ -145,39 +145,39 @@ def static_value(board, player):
             a = [board[row, col], board[row, col + 1], board[row, col + 2], board[row, col + 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
-            ans += (-1*(p2>0 and p1==0)*(p2**6))
-            '''if p2>0 and p1==0: #if enemy row detected
+            #ans += (-1*(p2>0 and p1==0)*(p2**6))
+            if p2>0 and p1==0: #if enemy row detected
                 ans -= p2**6
             elif p2>0:
                 ans = ans
             else:
-                ans += p1**6'''
+                ans += p1**6
 
     for col in range(6):  # cols
         for row in range(4):
             a = [board[row, col], board[row + 1, col], board[row + 2, col], board[row + 3, col]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
-            ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6)) + ((not p2 > 0 and not p1 == 0) * (p1 ** 6))
-            '''if p2>0 and p1==0: #if enemy row detected
+            #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6)) + ((not p2 > 0 and not p1 == 0) * (p1 ** 6))
+            if p2>0 and p1==0: #if enemy row detected
                 ans -= p2**6
             elif p2>0:
                 ans = ans
             else:
-                ans += p1**6'''
+                ans += p1**6
 
     for row in range(board.shape[0] - 3):  # diagonals (from top-left to bottom-right)
         for col in range(board.shape[1] - 3):
             a = [board[row, col], board[row + 1, col + 1], board[row + 2, col + 2], board[row + 3, col + 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
-            ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
-            '''if p2>0 and p1==0: #if enemy row detected
+            #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
+            if p2>0 and p1==0: #if enemy row detected
                 ans -= p2**6
             elif p2>0:
                 ans = ans
             else:
-                ans += p1**6'''
+                ans += p1**6
     for row in range(
         board.shape[0] - 3
     ):  # diagonals pt.2 electric boogaloo (from top-right to bottom-left)
@@ -185,13 +185,13 @@ def static_value(board, player):
             a = [board[row, col], board[row + 1, col - 1], board[row + 2, col - 2], board[row + 3, col - 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
-            ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
-            '''if p2>0 and p1==0: #if enemy row detected
+            #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
+            if p2>0 and p1==0: #if enemy row detected
                 ans -= p2**6
             elif p2>0:
                 ans = ans
             else:
-                ans += p1**6'''
+                ans += p1**6
 
     return ans
 
@@ -209,7 +209,7 @@ def convert(player):
 adjust = {1:1, 2:-1, 0:0}
 def minimax(node, depth, player):
     if depth == 0:
-        return static_value(node, player) * adjust[player]
+        return static_value(node, player) #* adjust[player]
     winner = wins(node)
     if winner != 0:
         return MAX_INT * adjust[winner]
@@ -218,7 +218,7 @@ def minimax(node, depth, player):
     for child in children:
         x = minimax(child, depth - 1, switch[player])
         value = min(value, x) if player == 2 else max(value, x)
-    return value * adjust[player]
+    return value #* adjust[player]
 
 
 
@@ -233,10 +233,10 @@ def best_move(board, player, depth): #returns value of each move
         new_board = copy.deepcopy(board)
         new_board[placement[0]][placement[1]] = player
         if placement[1] != -1:
-            moves.append((minimax(new_board,depth,switch[player]), move, new_board))
+            moves.append((minimax(new_board,depth-1,switch[player]), move, new_board))
     moves.sort(key=sortFirst)
     return moves[0]
-
+'''
 import time
 
 starttime2 = time.time()
@@ -244,7 +244,8 @@ if __name__ == '__main__':
     import cProfile
     with (cProfile.Profile() as pr):
         pr.enable()
-        print(best_move(board_ex, 2, 5))
+        #for _ in range(2000):
+        print(best_move(board_ex,2,4))
         pr.disable()
         pr.print_stats(sort='tottime')
-endtime2 = time.time()
+endtime2 = time.time()'''
