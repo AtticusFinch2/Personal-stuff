@@ -162,6 +162,7 @@ def drawWinner(model):
         )
         textPos = text.get_rect(center=(xScene / 2, yScene / 2))
         model.screen.blit(text, textPos)
+        model.ai_on = False
 
 
 def ai_handler(model):

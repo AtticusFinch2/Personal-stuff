@@ -4,13 +4,13 @@ import numpy as np
 # we store a board as 7x6 numPy array and
 ex_board = np.array([[0, 0, 0, 1, 2, 1] for _ in range(6)])
 ex_board_empty = np.array([[0,0,0,0,0,0] for _ in range(6)])
-board_ex = np.array([[0,0,0,0,0,0],
-                     [0,0,0,0,0,0],
-                     [0,0,0,0,0,1],
-                     [0,0,0,2,1,2],
-                     [0,0,0,0,0,0],
-                     [0,0,0,0,0,0],
-                     [0,0,0,0,0,0]])
+board_ex = np.array([[0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 2],
+                     [0, 0, 0, 0, 2, 2],
+                     [0, 0, 0, 0, 2, 1],
+                     [0, 0, 0, 0, 0, 1],
+                     [0, 0, 0, 0, 1, 2],
+                     [0, 0, 0, 1, 1, 1]])
 
 def placeMove(board, colPlaced, player):
     if board[colPlaced][0] != 0:
@@ -140,9 +140,9 @@ switch = {1:2, 2:1, 0:0}
 
 def static_value(board, player):
     ans = 0
-    for row in range(7):  # check rows
-        for col in range(3):
-            a = [board[row, col], board[row, col + 1], board[row, col + 2], board[row, col + 3]]
+    for col in range(board.shape[0]):  # check cols
+        for row in range(board.shape[1]-3):
+            a = [board[col, row], board[col, row + 1], board[col, row + 2], board[col, row + 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
             #ans += (-1*(p2>0 and p1==0)*(p2**6))
@@ -153,9 +153,9 @@ def static_value(board, player):
             else:
                 ans += p1**6
 
-    for col in range(6):  # cols
-        for row in range(4):
-            a = [board[row, col], board[row + 1, col], board[row + 2, col], board[row + 3, col]]
+    for col in range(board.shape[0]-3):  # rows
+        for row in range(board.shape[1]):
+            a = [board[col, row], board[col + 1, row], board[col + 2, row], board[col + 3, row]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
             #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6)) + ((not p2 > 0 and not p1 == 0) * (p1 ** 6))
@@ -166,9 +166,9 @@ def static_value(board, player):
             else:
                 ans += p1**6
 
-    for row in range(board.shape[0] - 3):  # diagonals (from top-left to bottom-right)
-        for col in range(board.shape[1] - 3):
-            a = [board[row, col], board[row + 1, col + 1], board[row + 2, col + 2], board[row + 3, col + 3]]
+    for col in range(board.shape[0] - 3):  # diagonals (from top-left to bottom-right)
+        for row in range(board.shape[1] - 3):
+            a = [board[col, row], board[col + 1, row + 1], board[col + 2, row + 2], board[col + 3, row + 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
             #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
@@ -178,11 +178,11 @@ def static_value(board, player):
                 ans = ans
             else:
                 ans += p1**6
-    for row in range(
+    for col in range(
         board.shape[0] - 3
     ):  # diagonals pt.2 electric boogaloo (from top-right to bottom-left)
-        for col in range(3, board.shape[1]):
-            a = [board[row, col], board[row + 1, col - 1], board[row + 2, col - 2], board[row + 3, col - 3]]
+        for row in range(3, board.shape[1]):
+            a = [board[col, row], board[col + 1, row - 1], board[col + 2, row - 2], board[col + 3, row - 3]]
             p1 = a.count(player)
             p2 = a.count(switch[player])
             #ans += (-1 * (p2 > 0 and p1 == 0) * (p2 ** 6))
@@ -214,7 +214,7 @@ def minimax(node, depth, player):
     if winner != 0:
         return MAX_INT * adjust[winner]
     value = MAX_INT * -1 * adjust[player]
-    children = [np.array(placeMove(node, col, player)) for col in range(node.shape[1]) if node[col][0] == 0]
+    children = [np.array(placeMove(node, col, player)) for col in range(node.shape[0]) if node[col][0] == 0]
     for child in children:
         x = minimax(child, depth - 1, switch[player])
         value = min(value, x) if player == 2 else max(value, x)
@@ -228,11 +228,11 @@ def sortFirst(triple):
 
 def best_move(board, player, depth): #returns value of each move
     moves = []
-    for move in range(board.shape[1]):
+    for move in range(7):
         placement = placeMoveFast(board, move)
         new_board = copy.deepcopy(board)
         new_board[placement[0]][placement[1]] = player
-        if placement[1] != -1:
+        if board[move][0] == 0:
             moves.append((minimax(new_board,depth-1,switch[player]), move, new_board))
     moves.sort(key=sortFirst)
     return moves[0]
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     with (cProfile.Profile() as pr):
         pr.enable()
         #for _ in range(2000):
-        print(best_move(board_ex,2,4))
+        print(best_move(board_ex,2,5))
         pr.disable()
         pr.print_stats(sort='tottime')
 endtime2 = time.time()
