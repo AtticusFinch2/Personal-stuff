@@ -236,7 +236,7 @@ def best_move(board, player, depth): #returns value of each move
             moves.append((minimax(new_board,depth-1,switch[player]), move, new_board))
     moves.sort(key=sortFirst)
     return moves[0]
-'''
+
 import time
 
 starttime2 = time.time()
@@ -248,4 +248,4 @@ if __name__ == '__main__':
         print(best_move(board_ex,2,4))
         pr.disable()
         pr.print_stats(sort='tottime')
-endtime2 = time.time()'''
+endtime2 = time.time()
