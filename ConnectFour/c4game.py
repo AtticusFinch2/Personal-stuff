@@ -77,7 +77,7 @@ def main():
         drawWinner(model)
         # flip() the display to put your work on screen
         pygame.display.flip()
-        if ticker >= 5 and model.player == 2: #increase to slow it down
+        if ticker >= 5 and model.player == 2:  # increase to slow it down
             ai_handler(model)
             ticker = 0
         else:
@@ -122,7 +122,7 @@ cfv = {
     1: pygame.Color(250, 0, 0),
     2: pygame.Color(200, 200, 0),
     3: pygame.Color(50, 0, 0),
-    4: pygame.Color(50,50,0)
+    4: pygame.Color(50, 50, 0),
 }
 
 
@@ -138,7 +138,7 @@ def drawHandler(model):
     move = c4logic.placeMoveFast(model.board, model.hoverSq[0])
     pygame.draw.circle(
         model.screen,
-        cfv[model.player+2],
+        cfv[model.player + 2],
         (
             (boxW * move[0] + (boxW / 2)),
             (boxW * move[1] + (boxW / 2)),
@@ -147,16 +147,16 @@ def drawHandler(model):
     )
 
 
-cfw = {1:"Red", 2:"Yellow"}  # color from winner
+cfw = {1: "Red", 2: "Yellow"}  # color from winner
+
+
 def drawWinner(model):
     winner = c4logic.wins(model.board)
     if winner > 0:
-        print(model.board)
+        # print(model.board)
         topLeft = (0, 0)
-        theCell = pygame.Rect(
-            topLeft, (model.screen.get_width(), model.screen.get_height())
-        )
-        pygame.draw.rect(model.screen, pygame.Color(0, 0, 0), theCell)
+        # theCell = pygame.Rect(topLeft, (model.screen.get_width(), model.screen.get_height()))
+        # pygame.draw.rect(model.screen, pygame.Color(0, 0, 0), theCell)
         text = fontsmall.render(
             f"{cfw[winner]} won!", False, pygame.Color(250, 250, 250)
         )
@@ -172,7 +172,9 @@ def ai_handler(model):
         model.board = move[2]
         end_time = time.time()
         model.taken = end_time - start_time
-        print(f"Ai's Move: Column moved = {move[1]}, Loss: {move[0]}, Time taken on this move:{model.taken}")
+        print(
+            f"Ai's Move: Column moved = {move[1]}, Loss: {move[0]}, Time taken on this move:{model.taken}"
+        )
         model.player = flip(model.player)
 
 
