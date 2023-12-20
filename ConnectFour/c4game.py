@@ -77,7 +77,7 @@ def main():
         drawWinner(model)
         # flip() the display to put your work on screen
         pygame.display.flip()
-        if ticker >= 5 and model.player == 2:  # increase to slow it down
+        if ticker >= 5 and model.player == 1:  # increase to slow it down, change the == statement to change who plays
             ai_handler(model)
             ticker = 0
         else:

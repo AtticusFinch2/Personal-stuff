@@ -236,7 +236,7 @@ adjust = {1: 1, 2: -1, 0: 0}
 WinnerInt = 1000000
 
 
-def minimax(node, depth, player):
+def minimax(node, depth, player, globalMover):
     if depth == 0:
         return static_value(node, player)  # * adjust[player]
     winner = wins(node)
@@ -249,8 +249,8 @@ def minimax(node, depth, player):
         if node[col][0] == 0
     ]
     for child in children:
-        x = minimax(child, depth - 1, switch[player])
-        value = min(value, x) if player == 2 else max(value, x)
+        x = minimax(child, depth - 1, switch[player], globalMover)
+        value = min(value, x) if player == globalMover else max(value, x)
     return value  # * adjust[player]
 
 
@@ -260,13 +260,15 @@ def sortFirst(triple):
 
 def best_move(board, player, depth):  # returns value of each move
     moves = []
+    adjust[player] = -1
+    adjust[switch[player]] = 1
     for move in range(7):
         placement = placeMoveFast(board, move)
         new_board = copy.deepcopy(board)
         new_board[placement[0]][placement[1]] = player
         if board[move][0] == 0:
             moves.append(
-                (minimax(new_board, depth - 1, switch[player]), move, new_board)
+                (minimax(new_board, depth - 1, switch[player], player), move, new_board)
             )
     moves.sort(key=sortFirst)
     return moves[0]
@@ -281,7 +283,7 @@ if __name__ == "__main__":
     with cProfile.Profile() as pr:
         pr.enable()
         # for _ in range(2000):
-        print(best_move(board_ex, 2, 5))
+        print(best_move(board_ex, 1, 5))
         pr.disable()
         pr.print_stats(sort="tottime")
 endtime2 = time.time()
