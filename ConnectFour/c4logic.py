@@ -236,7 +236,7 @@ adjust = {1: 1, 2: -1, 0: 0}
 WinnerInt = 1000000
 
 
-def minimax(node, depth, player, globalMover):
+def minimax(node, depth, player, globalMover, maximax = -MAX_INT, minimin = MAX_INT):
     if depth == 0:
         return static_value(node, player)  # * adjust[player]
     winner = wins(node)
@@ -249,8 +249,17 @@ def minimax(node, depth, player, globalMover):
         if node[col][0] == 0
     ]
     for child in children:
-        x = minimax(child, depth - 1, switch[player], globalMover)
-        value = min(value, x) if player == globalMover else max(value, x)
+        x = minimax(child, depth - 1, switch[player], globalMover, maximax=maximax, minimin=minimin)
+        if player == globalMover:
+            value = min(value, x)
+            minimin = min(minimin, x)
+            if minimin <= maximax:
+                break
+        else:
+            value = max(value, x)
+            maximax = max(maximax, x)
+            if maximax >= minimin:
+                break
     return value  # * adjust[player]
 
 
