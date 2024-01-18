@@ -7,7 +7,6 @@ MAX_INT = 2**30
 branching = 3
 initDepth = 5
 edgeListActual = []
-valueAtNode = defaultdict()
 
 
 
@@ -27,7 +26,6 @@ def minimax(node, depth, alpha, beta, maxing, t):
     for child in children:
         edgeListActual.append(((depth+1, k), (depth, t)))
         x = minimax(child, depth+1, alpha, beta, not maxing, k)
-        valueAtNode[(depth + 1, k, (depth, t))] = x
         k+=1
         if maxing:
             value = max(value, x)
@@ -39,5 +37,4 @@ def minimax(node, depth, alpha, beta, maxing, t):
             break
     return value
 root_value = minimax(1, 0, -MAX_INT, MAX_INT, True, 0)
-print(valueAtNode, root_value)
 

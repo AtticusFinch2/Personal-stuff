@@ -245,7 +245,7 @@ def minimax(node, depth, player, globalMover, maximax = -MAX_INT, minimin = MAX_
     value = MAX_INT * -1 * adjust[player]
     children = [
         np.array(placeMove(node, col, player))
-        for col in range(node.shape[0])
+        for col in [4,5,3,6,2,1,0]
         if node[col][0] == 0
     ]
     for child in children:

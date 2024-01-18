@@ -49,9 +49,10 @@ def main():
     clock = pygame.time.Clock()
     running = True
     ticker = 0
-    global fontbig, fontsmall
+    global fontbig, fontsmall, fontsmaller
     fontbig = pygame.font.Font(None, 150)
     fontsmall = pygame.font.Font(None, 100)
+    fontsmaller = pygame.font.Font(None, 25)
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -75,9 +76,10 @@ def main():
 
         drawHandler(model)
         drawWinner(model)
+        watermark(model)
         # flip() the display to put your work on screen
         pygame.display.flip()
-        if ticker >= 5 and model.player == 2:  # increase to slow it down, change the == statement to change who plays
+        if ticker >= 0 and model.player == 2:  # increase to slow it down, change the == statement to change who plays
             ai_handler(model)
             ticker = 0
         else:
@@ -168,7 +170,7 @@ def drawWinner(model):
 def ai_handler(model):
     if model.ai_on:
         start_time = time.time()
-        move = c4logic.best_move(model.board, model.player, 5)
+        move = c4logic.best_move(model.board, model.player, 7)
         model.board = move[2]
         end_time = time.time()
         model.taken = end_time - start_time
@@ -176,5 +178,13 @@ def ai_handler(model):
             f"Ai's Move: Column moved = {move[1]}, Loss: {move[0]}, Time taken on this move:{model.taken}"
         )
         model.player = flip(model.player)
+
+def watermark(model):
+    text = fontsmaller.render(
+        "Made by Braden Miller", False, pygame.Color(250, 250, 250)
+    )
+    textPos = text.get_rect(center=(3*xScene / 4, 3*yScene / 4))
+    model.screen.blit(text, textPos)
+    model.ai_on = False
 
 main()
