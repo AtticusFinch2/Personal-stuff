@@ -6,7 +6,7 @@ import numpy as np
 MAX_INT = 2**30
 branching = 3
 initDepth = 5
-edgeListActual = []
+edgeList = []
 
 
 
@@ -24,7 +24,7 @@ def minimax(node, depth, alpha, beta, maxing, t):
     value = MAX_INT if not maxing else -MAX_INT
     k=0
     for child in children:
-        edgeListActual.append(((depth+1, k), (depth, t)))
+        edgeList.append(((depth+1, k), (depth, t)))
         x = minimax(child, depth+1, alpha, beta, not maxing, k)
         k+=1
         if maxing:
