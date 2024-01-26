@@ -1,5 +1,3 @@
-
-
 class maxHeapBM:
     def __init__(self):
         self.list = []
@@ -112,6 +110,7 @@ class minHeapBM:
         self.size -= 1
         self.shuffle(0)
         return max_val
+
 
 '''
 queue_before = [10,35,33,42,10,14,19,27,44,26,31]
