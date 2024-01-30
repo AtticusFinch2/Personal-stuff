@@ -100,7 +100,7 @@ def dijkstra(weights: {(int, int): int}, start=0):
     distances = {node: s[node][0] for node in s}
     parents = {node: s[node][1][len(s[node][1])-2] for node in s if len(s[node][1])>1}
     parents[start] = None
-    return s, distances
+    return distances, parents
 
 
 

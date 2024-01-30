@@ -112,6 +112,19 @@ class minHeapBM:
         return max_val
 
 
+def is_min_heap(l):
+    n = len(l)
+    for i in range(n):
+        if 2*i+1 <= n and 2*i+2 <= n:
+            if l[i] <= l[2*i+1] and l[i] <= l[2*i+2]:
+                return False
+        elif 2*i+1 <= n:
+            if l[i] <= l[2*i+1]:
+                return False
+    return True
+
+
+
 '''
 queue_before = [10,35,33,42,10,14,19,27,44,26,31]
 heap = maxHeapBM()
