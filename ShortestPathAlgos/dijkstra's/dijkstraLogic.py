@@ -1,4 +1,5 @@
 import random, math, copy
+from collections import defaultdict
 from queue import PriorityQueue
 from HeapBrady import minHeapBM
 
@@ -27,26 +28,46 @@ class weightedGraph:  # directed as well, but for this example there is redundan
         self.n = len(adj)
 
     def dijkstra(self, start):
-        heap = minHeapBM()
-        heap.insert((0, start, [start]))  # (dist, node, path)
-        shortest_dist_to = {node: (math.inf, []) for node in self.adj}  # distance then path for each node
-        shortest_dist_to[start] = (0, [start])
+        heap = minHeapBM(initial_array=[])
+        heap.insert((0, start, None))  # (dist, node, parent)
+        shortest_dist_to = defaultdict(lambda: (math.inf, None))  # distance then parent for each node
+        shortest_dist_to[start] = (0, None)
+        visited = set()
         while not heap.empty():
-            (distToCurrent, current, path_to_current) = heap.pop()
-            print(current, shortest_dist_to, distToCurrent, path_to_current)
+            (distToCurrent, current, parent) = heap.pop()
+            visited.add(current)
             if distToCurrent <= shortest_dist_to[current][0]:
-                print("passed")
                 # if it's a slower path, just ignore it. This is the optimization of dijkstra's over brute force
-                shortest_dist_to[current] = (distToCurrent, path_to_current)
+                shortest_dist_to[current] = (distToCurrent, parent)
                 for neighbor in self.adj[current]:
+                    if neighbor not in visited:  # this line doesn't make it more accurate, but it cuts time in half
+                        d_to_neighbor = distToCurrent+(self.weights[(current, neighbor)])
+                        # distance to neighbor is just distance to current and the weight of the edge between them
+                        heap.insert((d_to_neighbor, neighbor, current))
+        return shortest_dist_to
+    def dijkstra_faster(self, start):
+        heap = PriorityQueue()
+        heap.put((0, start, None))  # (dist, node, parent)
+        shortest_dist_to = defaultdict(lambda: (math.inf, None))  # distance then parent for each node
+        shortest_dist_to[start] = (0, None)
+        visited = set()
+        while not heap.empty():
+            (distToCurrent, current, parent) = heap.get()
+            visited.add(current)
+            #print(current, shortest_dist_to, distToCurrent, path_to_current, shortest_dist_to[current][0])
+            if distToCurrent <= shortest_dist_to[current][0]:
+                # if it's a slower path, just ignore it. This is the optimization of dijkstra's over brute force
+                shortest_dist_to[current] = (distToCurrent, parent)
+                for neighbor in self.adj[current]:
+                    if neighbor in visited:
+                        continue  # this line doesn't make it more accurate, but it cuts time in half for big sets
                     d_to_neighbor = distToCurrent+(self.weights[(current, neighbor)])
                     # distance to neighbor is just distance to current and the weight of the edge between them
-                    path_to_neighbor = path_to_current + [neighbor]
-                    heap.insert((d_to_neighbor, neighbor, path_to_neighbor))
+                    heap.put((d_to_neighbor, neighbor, current))
         return shortest_dist_to
 
     def dijkstra_end(self, start, end):
-        heap = minHeapBM()
+        heap = minHeapBM(initial_array=[])
         heap.insert((0, start, [start]))  # (dist, node, path)
         shortest_dist_to = {node: (math.inf, []) for node in self.adj}  # distance then path for each node
         shortest_dist_to[start] = (0, [start])
@@ -72,7 +93,7 @@ class weightedGraph:  # directed as well, but for this example there is redundan
             self.new_weights[edge] = self.weights[edge] + potential(edge[0]) - potential(edge[1])
 
         # now dijkstra's
-        heap = minHeapBM()
+        heap = minHeapBM(initial_array=[])
         heap.insert((0, start, [start]))  # (dist, node, path)
         shortest_dist_to = {node: (math.inf, []) for node in self.adj}  # distance then path for each node
         shortest_dist_to[start] = (0, [start])
@@ -94,12 +115,11 @@ class weightedGraph:  # directed as well, but for this example there is redundan
 
 
 
-def dijkstra(weights: {(int, int): int}, start=0):
-    g = weightedGraph(weights)
+def dijkstra(weights: {(int, int): int}, start=0, e=-1):
+    g = weightedGraph(weights, adj={} if e==-1 else e)
     s = g.dijkstra(start)
     distances = {node: s[node][0] for node in s}
-    parents = {node: s[node][1][len(s[node][1])-2] for node in s if len(s[node][1])>1}
-    parents[start] = None
+    parents = {node: s[node][1] for node in s}
     return distances, parents
 
 

@@ -1,3 +1,5 @@
+import random
+
 from graphSolver import dfsBrady
 
 
@@ -74,8 +76,14 @@ def makeGridTuple(w, h):
     }
 
 
-
-
 def makeMaze(w, h, start=(0, 0)):
     grid = makeGridTuple(w, h)
     return dfsBrady.dfsPosnRand(grid, start)
+
+
+def makeSparseMaze(w, h, start=(0, 0)):
+    grid = makeGridTuple(w, h)
+    for x in range(w):
+        for y in range(h):
+            random.randrange(0,1)
+    return
