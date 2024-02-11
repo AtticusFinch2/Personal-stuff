@@ -45,6 +45,7 @@ class weightedGraph:  # directed as well, but for this example there is redundan
                         # distance to neighbor is just distance to current and the weight of the edge between them
                         heap.insert((d_to_neighbor, neighbor, current))
         return shortest_dist_to
+
     def dijkstra_faster(self, start):
         heap = PriorityQueue()
         heap.put((0, start, None))  # (dist, node, parent)
@@ -117,7 +118,7 @@ class weightedGraph:  # directed as well, but for this example there is redundan
 
 def dijkstra(weights: {(int, int): int}, start=0, e=-1):
     g = weightedGraph(weights, adj={} if e==-1 else e)
-    s = g.dijkstra(start)
+    s = g.dijkstra_faster(start)
     distances = {node: s[node][0] for node in s}
     parents = {node: s[node][1] for node in s}
     return distances, parents

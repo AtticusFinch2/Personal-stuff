@@ -26,16 +26,6 @@ class minHeapBM:
 
     def bubble_down(self, i):
         bubble_down(self.list, self.size, i)
-        '''
-        parent = i
-        left_child = 2 * i + 1
-        right_child = 2 * i + 2
-        if left_child < self.size and self.list[left_child] < self.list[parent]:
-            self.list[left_child], self.list[parent] = self.list[parent], self.list[left_child]
-            self.bubble_down(left_child)
-        if right_child < self.size and self.list[right_child] < self.list[parent]:
-            self.list[right_child], self.list[parent] = self.list[parent], self.list[right_child]
-            self.bubble_down(right_child)'''
 
     def bubble_up(self, child):
         while child > 0 and self.list[child] < self.parentValue(child):
@@ -43,7 +33,7 @@ class minHeapBM:
             self.swap(child, parent)
             child = parent
 
-    def insert(self, value):
+    def put(self, value):
         child = self.size
         self.size += 1
         self.list.append(None)  # increase list size.
@@ -52,7 +42,7 @@ class minHeapBM:
         # now fix the heap upwards:
         self.bubble_up(child)
 
-    def pop(self):
+    def get(self):
         if self.size == 0:
             print("CANNOT DELETE FROM AN EMPTY HEAP")
             return
