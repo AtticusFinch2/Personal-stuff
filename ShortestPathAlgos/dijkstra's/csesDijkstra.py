@@ -1,7 +1,5 @@
-import copy
-import math
 from collections import defaultdict
-import heapq
+#import heapq
 import sys
 
 
@@ -20,7 +18,7 @@ def bubble_down(heap, loc):
         child_loc = 2 * loc + 1  # new left child
     # now, the heap is sorted except for the new item and the final leaf node
     #    (loc is now the location of the leaf)
-    # we just put new item at the leaf node and bubble up, since it's faster
+    # we just put new item at the leaf node and bubble up, since it's faster (source: python heapq docs)
     heap[loc] = new
     bubble_up(heap, start_loc, loc)
 
@@ -29,9 +27,7 @@ def bubble_up(heap, start_bubble_pos, loc):
     newitem = heap[loc]
     while loc > start_bubble_pos:
         parentLoc = (loc - 1) >> 1
-        #print(heap)
         parent = heap[parentLoc]
-        #print(newitem, parent)
         if newitem < parent:
             heap[loc] = parent
             loc = parentLoc
@@ -59,41 +55,44 @@ def heappush(heap, value):
 
 def dijkstra_faster(start, weights, adj):
     heap = [(0, start)]  # (dist, node)
-    shortest_dist_to = defaultdict(lambda: math.inf)  # distance then parent for each node
+    shortest_dist_to = {}  # distance then parent for each node
     shortest_dist_to[start] = 0
     visited = set()
     while heap:
-        (distToCurrent, current) = heapq.heappop(heap)
+        (distToCurrent, current) = heappop(heap)
         if current in visited:
             continue
         visited.add(current)
-        #print(adj[current])
         for neighbor in adj[current]:
             if neighbor not in shortest_dist_to or shortest_dist_to[neighbor] > shortest_dist_to[current]+weights[(current, neighbor)]:
                 shortest_dist_to[neighbor] = shortest_dist_to[current]+weights[(current, neighbor)]
-                heapq.heappush(heap, (distToCurrent+weights[(current, neighbor)], neighbor))
+                heappush(heap, (distToCurrent+weights[(current, neighbor)], neighbor))
     return shortest_dist_to
 
 
+def do():
+    lines = sys.stdin.readlines()
+    line1 = lines[0]
+    xs = line1.strip().split()
+    n, m = int(xs[0]), int(xs[1])
+    weights = {}
+    adj = defaultdict(lambda: [])
+    c = 1
+    while c <= m:
+        start, end, cost = map(int, lines[c].strip().split())
+        adj[start].append(end)
+        if (start, end) in weights:
+            cost = min(cost, weights[(start, end)])
+        weights[(start, end)] = cost
+        c += 1
+    dist = dijkstra_faster(1, weights, adj)
+    for i in range(1, n + 1):
+        print(dist[i], end=" ")
+do()
 
-lines = sys.stdin.readlines()
-line1 = lines[0]
-xs = line1.strip().split()
-n, m = int(xs[0]), int(xs[1])
-weights = {}
-adj = defaultdict(lambda: [])
-c = 1
-while c <= m:
-    start, end, cost = map(int, lines[c].strip().split())
-    adj[start].append(end)
-    if (start, end) in weights:
-        cost = min(cost, weights[(start, end)])
-    weights[(start, end)] = cost
-    c += 1
-dist = dijkstra_faster(1, weights, adj)
-strOut = ""
-for i in range(1, n + 1):
-    strOut += str(dist[i]) + " "
-print(strOut)
+
+
+
+
 
 
