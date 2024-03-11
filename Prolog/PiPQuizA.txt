@@ -1,0 +1,15 @@
+1- Secret = Var("Secret")
+2- number2 = Relation(Descriptor("unknown", Secret)
+3- number3 = Clause(Relation(Descriptor("good"), Secret), number2)
+4- db = [number3, Clause(number2)]
+5- def __init__(self, name) -> None:
+       self.name = name
+6- The Var, Atom, And descriptor classes can just inherit the __init__ and __eq__ methods.
+   (they can also inherit __repr__, __str__, and __hash__, but this gets tricky when you have a var and atom with
+   the same stored self.name but different names in python)
+7- __str__ wants to be readable, __repr__ wants to be distinguishable from other repr calls
+8- because python's == cannot compare user written classes by default
+9- def __eq__(self, other):
+       return isinstance(self, type(other)) and self.name == other.name
+10- When we have our dictionary of bindings, we bind var as a key to either another var
+    or an atom. Thus, we need to be able to hash the key in order for it to be stored in a map
