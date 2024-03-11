@@ -1,3 +1,5 @@
+import copy
+
 
 class symbol:
     def __init__(self, name) -> None:
@@ -16,21 +18,267 @@ class Var(symbol):
     def __str__(self):
         return (self.name)
     def __hash__(self):
-        return hash(self.name)
+        return hash(f"Var {self.name}")
 class Atom(symbol):
     def __repr__(self):
         return (f"(Atom: {self.name})")
     def __str__(self):
         return (self.name)
+    def __hash__(self):
+        return hash(f"Atom {self.name}")
 class Descriptor(symbol):
     pass
-class Relation():
+class Relation:
     def __repr__(self):
-        return (f"Relation {self.d}, args: {self.args}")
+        return f"(Relation {self.d}, args: {self.args})"
+    def __str__(self):
+        return f"(Relation {self.d}, args: {self.args})"
     def __init__(self, descrip, *args):
         self.d = descrip
         self.args = list(args)
 
+class Clause:
+    def __repr__(self):
+        return f"(Clause {self.head} with *rest: {self.rest})"
+    def __str__(self):
+        return f"(Clause {self.head} with *rest: {self.rest})"
+    def __init__(self, head, *rest):
+        self.head = head
+        self.rest = [] if rest is None else rest
+
+def make_clause_1():
+    # Statement of the fact that sand is dry.
+    # dry(sand).
+    d = Descriptor("dry")
+    s = Atom("sand")
+    rel = Relation(d, s)
+    clause = Clause(rel)
+    return clause
+
+
+def make_clause_2():
+    # Statement of rule
+    # dry(X) :- stage2(X).
+    dry = Descriptor("dry")
+    stage2 = Descriptor("stage2")
+    X = Var("X")
+
+    rel1 = Relation(dry, X)
+    rel2 = Relation(stage2, X)
+
+    clause = Clause(rel1, rel2)
+    return clause
+
+def make_clause_3():
+    # Statement of the fact that sand is dry.
+    # no_water(cardboard_box).
+    d = Descriptor("no_water")
+    s = Atom("cardboard_box")
+    rel = Relation(d, s)
+    clause = Clause(rel)
+    return clause
+
+
+def test_unify_recursive_bindings_7():
+    dry = Descriptor("dry")
+    cb = Atom("cardboard_box")
+    X = Var("X")
+    dry_box = Relation(dry, cb)
+    dry_X = Relation(dry, X)
+    answer = {X:cb}
+    assert unify(dry_X, dry_box) == answer
+
+
+def prove_one(database, the_relation, bindings=None):
+    bindings = {} if bindings is None else copy.deepcopy(bindings)
+    ans = []
+    for clause in database:
+        if clause.head.d == the_relation.d:
+
+            newBindings = unify(clause.head, the_relation, bindings)
+            if newBindings is not None:
+
+                # print(f"\n{clause} \n with bindings:{bindings}")
+                # print(f"and relation: {the_relation} \n and newBindings: {newBindings}")
+
+                if not clause.rest:  # if clause is a fact
+                    ans.append(newBindings)
+                    continue
+
+                for req in clause.rest:
+                    possible_solutions = prove_one(database, req, newBindings)
+
+                    if possible_solutions:
+                        for binding in possible_solutions:
+                            merging_bindings = newBindings.copy()
+                            merging_bindings.update(binding)
+                            ans.append(merging_bindings)
+    return ans
+
+def test_prove_one_1():
+    database = []
+    database.append(make_clause_1())
+    database.append(make_clause_2())
+    database.append(make_clause_3())
+
+    stage2 = Descriptor("stage2")
+    no_water = Descriptor("no_water")
+    Z = Var("Z")
+
+    rel1 = Relation(stage2, Z)
+    rel2 = Relation(no_water, Z)
+
+    database.append(Clause(rel1, rel2))
+
+    # dry(sand).
+    # dry(X) :- stage2(X).
+    # no_water(cardboard_box).
+    # stage2(Z) :- no_water(Z).
+    # want to prove dry(cardboard_box)
+
+    dry = Descriptor("dry")
+    noWater = Descriptor("no_water")
+    cb = Atom("cardboard_box")
+    sand = Atom("sand")
+    dry_box = Relation(dry, cb)
+    answer = prove_one(database, dry_box)
+    assert answer == [{Var("X"): Atom("cardboard_box"), Var("Z"): Atom("cardboard_box")}]
+
+
+def test_prove_one_2():
+    # DATABASE HAS:
+    # orange(X) :- theory().
+    # theory().
+    # Want to prove:
+    # orange(juice).
+
+    # With this database,
+    # orange(juice) is true. with bindings {X = juice}
+    # summer() is false because summer() does not appear anywhere is the database.
+    # theory() is true because it is in the database.
+    # Book writes that: theory/0
+
+    orange = Descriptor('orange')
+    theory = Descriptor('theory')
+    X = Var('X')
+    orangeX = Relation(orange, X)
+    theoryBlank = Relation(theory)
+
+    factOrange = Clause(orangeX, theoryBlank)
+    factTheory = Clause(theoryBlank)
+
+    db = [factOrange, factTheory]
+
+    juice = Atom('juice')
+    orange_juice = Relation(orange, juice)
+    assert prove_one(db, orange_juice) == [{X: juice}]
+
+    # second test showing things not in the database cannot be proven
+    baloney = Descriptor('baloney')
+    baloney_relation = Relation(baloney)
+    assert prove_one(db, baloney_relation) == []
+
+
+def test_prove_one_3():
+    # DATABASE HAS:
+    # orange(X) :- theory(X).
+    # theory(Y) :- liquid(Y).
+    # liquid(Z) :- no_pulp(Z).
+    # no_pulp(juice).
+
+    # Want to prove:
+    # orange(juice).
+
+    # With this database,
+    # orange(juice) is true. with bindings {X = juice}
+    # summer() is false because summer() does not appear anywhere is the database.
+    # theory() is true because it is in the database.
+    # Book writes that: theory/0
+
+    orange = Descriptor('orange')
+    theory = Descriptor('theory')
+    liquid = Descriptor('liquid')
+    no_pulp = Descriptor('no_pulp')
+    X = Var('X')
+    Y = Var('Y')
+    Z = Var('Z')
+    juice = Atom('juice')
+    orangeX = Relation(orange, X)
+    theoryX = Relation(theory, X)
+    liquidY = Relation(liquid, Y)
+    theoryY = Relation(theory, Y)
+    liquidZ = Relation(liquid, Z)
+    no_pulpZ = Relation(no_pulp, Z)
+    no_pulp_juice = Relation(no_pulp, juice)
+
+    fact1 = Clause(orangeX, theoryX)
+    fact2 = Clause(theoryY, liquidY)
+    fact3 = Clause(liquidZ, no_pulpZ)
+    factNoPulp = Clause(no_pulp_juice)
+
+    db = [fact1, fact2, fact3, factNoPulp]
+
+
+    orange_juice = Relation(orange, juice)
+    assert prove_one(db, orange_juice) == [{X: juice, Y:juice, Z:juice}]
+
+    # second test showing things not in the database cannot be proven
+    baloney = Descriptor('baloney')
+    baloney_relation = Relation(baloney)
+    assert prove_one(db, baloney_relation) == []
+
+
+def test_prove_one_4():
+    # DATABASE HAS:
+    # orange(X) :- theory(X).
+    # theory(Y) :- liquid(Y).
+    # liquid(Z) :- no_pulp(Z).
+    # no_pulp(juice).
+    # orange(fruit) :- no_pulp(fruit).
+
+    # Want to prove:
+    # orange(juice).
+
+    # With this database,
+    # orange(juice) is true. with bindings {X = juice}
+    # summer() is false because summer() does not appear anywhere is the database.
+    # theory() is true because it is in the database.
+    # Book writes that: theory/0
+
+    orange = Descriptor('orange')
+    theory = Descriptor('theory')
+    liquid = Descriptor('liquid')
+    no_pulp = Descriptor('no_pulp')
+    X = Var('X')
+    Y = Var('Y')
+    Z = Var('Z')
+    fruit = Var('fruit')
+    juice = Atom('juice')
+    orangeX = Relation(orange, X)
+    theoryX = Relation(theory, X)
+    liquidY = Relation(liquid, Y)
+    theoryY = Relation(theory, Y)
+    liquidZ = Relation(liquid, Z)
+    no_pulpZ = Relation(no_pulp, Z)
+    no_pulp_juice = Relation(no_pulp, juice)
+    orangeFruit = Relation(orange, fruit)
+    no_pulpFruit = Relation(no_pulp, fruit)
+
+    fact1 = Clause(orangeX, theoryX)
+    fact2 = Clause(theoryY, liquidY)
+    fact3 = Clause(liquidZ, no_pulpZ)
+    fact4 = Clause(no_pulp_juice)
+    fact5 = Clause(orangeFruit, no_pulpFruit)
+
+    db = [fact1, fact2, fact3, fact4, fact5]
+
+    orange_juice = Relation(orange, juice)
+    assert prove_one(db, orange_juice) == [{X: juice, Y: juice, Z: juice}, {fruit: juice}]
+
+    # second test showing things not in the database cannot be proven
+    baloney = Descriptor('baloney')
+    baloney_relation = Relation(baloney)
+    assert prove_one(db, baloney_relation) == []
 
 def test_str_output():
     a = Atom("docmo")
@@ -59,7 +307,7 @@ def bindVarToAtom(input1, input2, bindings):
         if not trueValue:
             bindings[input2] = input1
             return bindings
-        if input2 == trueValue:
+        if input1 == trueValue:
             return bindings
         else:  # THERE IS ATOM MISMATCH
             return None
@@ -90,10 +338,11 @@ def bindVarToVar(arg1, arg2, bindings):
         bindings[arg1] = arg2
         bindings[arg2] = arg1
     elif trueArg2:  # arg 2 has been assigned
-        bindings = bindVarToAtom(trueArg2, arg1)
+        bindings = bindVarToAtom(trueArg2, arg1, bindings)
     else:  # arg 1 has been assigned
-        bindings = bindVarToAtom(trueArg1, arg2)
+        bindings = bindVarToAtom(trueArg1, arg2, bindings)
     return bindings
+
 
 def recurseUntilAtom(cur, bindings):
     visited = set()
@@ -104,15 +353,15 @@ def recurseUntilAtom(cur, bindings):
 
 
 def recurseUnify(fact1, fact2, bindings):
-    temp = unify(fact1, fact2, bindings=bindings)
+    temp = unifyinner(fact1, fact2, bindings=bindings)
     return temp if temp else None
 
-def unify_basic(f1, f2):
-    # since python's GC will leave 'bindings' as what it was when it was last called,
-    # we need to use this function as a shell when we want to only pass in 2 args
-    return unify(f1, f2, bindings={})
-def unify(fact1, fact2, bindings = {}):
-    #print(fact1, fact2, bindings)
+
+def unify(f1, f2, bindings=None):
+    bindings = {} if bindings is None else copy.deepcopy(bindings)
+    return unifyinner(copy.deepcopy(f1), copy.deepcopy(f2), bindings)
+
+def unifyinner(fact1, fact2, bindings):
     if not (isinstance(fact1, Relation) and isinstance(fact2, Relation)):
         return unifyBasic(fact1, fact2, bindings)
     if fact1.d != fact2.d:  # different name
@@ -144,31 +393,31 @@ def unify(fact1, fact2, bindings = {}):
 def test_unify_basic_1a():
     five = Atom("5")
     seven = Atom("7")
-    assert unify_basic(five, seven) is None
+    assert unify(five, seven) is None
 
 
 def test_unify_basic_1b():
     fiveA = Atom("5")
     fiveB = Atom("5")
-    assert unify_basic(fiveA, fiveB) == {}
+    assert unify(fiveA, fiveB) == {}
 
 
 def test_unify_basic_2():
     five = Atom("5")
     X = Var("X")
-    assert unify_basic(five, X) == {X: five}
+    assert unify(five, X) == {X: five}
 
 
 def test_unify_basic_3():
     Y = Var("Y")
     seven = Atom("7")
-    assert unify_basic(Y, seven) == {Y: seven}
+    assert unify(Y, seven) == {Y: seven}
 
 
 def test_unify_basic_4():
     X = Var("X")
     Y = Var("Y")
-    assert unify_basic(X, Y) == {X: Y, Y: X}
+    assert unify(X, Y) == {X: Y, Y: X}
 
 
 def test_unify_basic_bindings_1():
@@ -192,7 +441,7 @@ def test_unify_recursive_bindings_3():
     fact = Descriptor('fact')
     rel1 = Relation(fact, X, X)
     rel2 = Relation(fact, five, six)
-    assert unify_basic(rel1, rel2) is None
+    assert unify(rel1, rel2) is None
 
 
 def test_unify_recursive_bindings_4():
@@ -201,7 +450,7 @@ def test_unify_recursive_bindings_4():
     fact = Descriptor('fact')
     rel1 = Relation(fact, X, X)
     rel2 = Relation(fact, five, five)
-    assert unify_basic(rel1, rel2) == {X: five}
+    assert unify(rel1, rel2) == {X: five}
 
 
 def test_unify_recursive_bindings_5():
@@ -211,7 +460,7 @@ def test_unify_recursive_bindings_5():
     fact = Descriptor('fact')
     rel1 = Relation(fact, X, X)
     rel2 = Relation(fact, five, six)
-    assert unify_basic(rel1, rel2) is None
+    assert unify(rel1, rel2) is None
 
 
 def test_unify_recursive_bindings_6():
@@ -228,7 +477,10 @@ def test_unify_recursive_bindings_6():
     rel2a = Relation(factb, X, Z)
     rel2b = Relation(facta, ten, thirty, rel2a)
     answer = {X: ten, Y: thirty, Z: fifty}
-    assert unify_basic(rel1b, rel2b) == answer
+    assert unify(rel1b, rel2b) == answer
+
+
+
 
 
 def test_unify_nested_relation_1():
