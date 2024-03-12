@@ -347,6 +347,7 @@ def recurseUntilAtom(cur, bindings):
     visited = set()
     while not isinstance(cur, Atom) and cur not in visited:
         # we are guaranteed for cur to be in bindings, but we can still loop on ourselves.
+        #   prevent the loop by having a visited set
         cur = bindings[cur]
     return cur if isinstance(cur, Atom) else None
 
@@ -363,6 +364,8 @@ def unify(f1, f2, bindings=None):
 def unifyinner(fact1, fact2, bindings):
     if not (isinstance(fact1, Relation) and isinstance(fact2, Relation)):  # if we are not unifying relations
         return unifyBasic(fact1, fact2, bindings)
+    if not (isinstance(fact1, Relation) and isinstance(fact2, Relation)):
+        return unifyBasic(fact1, fact2, bindings)  #
     if fact1.d != fact2.d:  # different name
         return None
     if len(fact1.args) != len(fact2.args):  # length of args is different, not supposed to happen so can't do it
@@ -385,7 +388,7 @@ def unifyinner(fact1, fact2, bindings):
             return recurseUnify(fact1, fact2, bindings)
         return None
     else:
-        print(f"mismatched arguments in unify() at {repr(fact1)}, {repr(fact2)}")
+        print(f"mismatched arguments in unify() at {repr(fact1)}, {repr(fact2)} \n  arguments are: {repr(arg1)}, {repr(arg2)}")
         return None
 
 
