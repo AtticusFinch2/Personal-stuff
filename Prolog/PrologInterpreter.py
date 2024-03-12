@@ -289,8 +289,7 @@ def test_repr_output():
     assert repr(a) == "(Atom: docmo)"
 
 
-
-def unifyBasic(item1, item2, bindings): # horrible written code, just for case simplicity
+def unifyBasic(item1, item2, bindings):  # horrible written code, just for case simplicity
     if isinstance(item1, Atom) and isinstance(item2,Atom):
         return None if item1.name != item2.name else {}
     if isinstance(item1, Var) and isinstance(item2, Var):
@@ -299,7 +298,7 @@ def unifyBasic(item1, item2, bindings): # horrible written code, just for case s
         return bindVarToAtom(item1, item2, bindings)
 
 
-def bindVarToAtom(input1, input2, bindings):
+def bindVarToAtom(input1, input2, bindings):  # this might be the worst function I have ever written
     trueValue = None
     if isinstance(input1, Atom) and isinstance(input2, Var):
         if input2 in bindings:
@@ -362,13 +361,13 @@ def unify(f1, f2, bindings=None):
     return unifyinner(copy.deepcopy(f1), copy.deepcopy(f2), bindings)
 
 def unifyinner(fact1, fact2, bindings):
-    if not (isinstance(fact1, Relation) and isinstance(fact2, Relation)):
+    if not (isinstance(fact1, Relation) and isinstance(fact2, Relation)):  # if we are not unifying relations
         return unifyBasic(fact1, fact2, bindings)
     if fact1.d != fact2.d:  # different name
         return None
-    if len(fact1.args) != len(fact2.args):  # length of args is different, not supposed to happen so throw KeyError
+    if len(fact1.args) != len(fact2.args):  # length of args is different, not supposed to happen so can't do it
         return None
-    if not (fact1.args and fact2.args):  # if either is empty
+    if not (fact1.args and fact2.args):  # if either is empty, we are at the last recursion stage
         return bindings
     arg1 = fact1.args.pop()
     arg2 = fact2.args.pop()
