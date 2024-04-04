@@ -1,4 +1,3 @@
 # Personal-stuff
 
- This is mostly just for python DSA & light competitive coding -
- Several of these projects use pygame to optimize game strategies.
+This is a large collection of projects with python DSA & light competitive coding -  Several of these projects use pygame to optimize game strategies.
