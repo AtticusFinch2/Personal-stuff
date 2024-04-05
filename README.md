@@ -1,5 +1,3 @@
 # Personal-stuff
 
- git my code
- I just put whatever misc. stuff i want in here
- Most is notebooks for AI
+This is a large collection of projects with python DSA & light competitive coding -  Several of these projects use pygame to optimize game strategies.
