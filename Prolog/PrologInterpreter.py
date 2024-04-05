@@ -21,7 +21,7 @@ class Var(symbol):
         return hash(f"Var {self.name}")
 class Atom(symbol):
     def __repr__(self):
-        return (f"(Atom: {self.name})")
+        return (f"Atom: {self.name}")
     def __str__(self):
         return (self.name)
     def __hash__(self):
@@ -30,21 +30,24 @@ class Descriptor(symbol):
     pass
 class Relation:
     def __repr__(self):
-        return f"(Relation {self.d}, args: {self.args})"
+        return f"Relation {self.d}, args: {self.args}"
     def __str__(self):
         return f"(Relation {self.d}, args: {self.args})"
-    def __init__(self, descrip, *args):
+    def __init__(self, descrip, *args, isListOfArgs = None):
         self.d = descrip
-        self.args = list(args)
+        self.args = list(args) if isListOfArgs is None else args
 
 class Clause:
     def __repr__(self):
         return f"(Clause {self.head} with *rest: {self.rest})"
     def __str__(self):
         return f"(Clause {self.head} with *rest: {self.rest})"
-    def __init__(self, head, *rest):
+    def __init__(self, head, *rest, isRestAsArray = None):
         self.head = head
-        self.rest = [] if rest is None else rest
+        if isRestAsArray is None:
+            self.rest = [] if rest is None else rest
+        else:
+            self.rest = rest[0]
 
 
 
@@ -63,7 +66,7 @@ def prove(database, the_relation, bindings=None):
     bindings = {} if bindings is None else copy.deepcopy(bindings)
     ans = []
     for clause in database:
-        print(clause, the_relation)
+        #print(clause, the_relation)
         if clause.head.d == the_relation.d:
             if clause.head.args == the_relation.args:  # if the relation is already in the database
                 return [{}]
@@ -291,7 +294,7 @@ def test_str_output():
 
 def test_repr_output():
     a = Atom("docmo")
-    assert repr(a) == "(Atom: docmo)"
+    assert repr(a) == "Atom: docmo"
 
 
 def unifyBasic(item1, item2, bindings):  # horrible written code, just for case simplicity

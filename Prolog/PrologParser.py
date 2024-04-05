@@ -10,9 +10,10 @@ def parseprint(p):
 databaseGrammar = '''
 lines: clause*
 clause: fact "."
-        | relation " :- " body+
+        | condition 
+condition: relation " :- " body+ "."
 body: relation ", "
-      | relation "."
+      | relation
 fact: relation
 
 term: (", " | "," | ) (atom | var | num | relation)
@@ -47,20 +48,22 @@ def parseDatabase(inp):
     p = Lark(databaseGrammar, start='lines')
     result = p.parse(inp)
     res2 = PrologTransformer().transform(result)
-    print(res2)
+    print(f"==================database====================\n{result.pretty()}")
     return res2
 def parseQuery(inp):
     p = Lark(queryGrammar, start='query')
     result = p.parse(inp)
     res2 = QueryTransformer().transform(result)
-    print(result.pretty(), db)
-    #return res2
+    print(f"\n===================queries===================\n{result.pretty()}")
+    return res2
 
 
 def main():
     global db
     db = parseDatabase(databaseLines)
-    parseQuery(queryLines)
+    #print(db)
+    bindings = parseQuery(queryLines)
+    print(f"resulting bindings {bindings}")
 
 class PrologTransformer(Transformer):
     def atom(self, kids):
@@ -73,15 +76,22 @@ class PrologTransformer(Transformer):
         return kids[0]
     def relation(self, kids):
         head, *arguments = kids
-        return PrologInterpreter.Relation(head, *arguments)
+        #print(head, *arguments, kids)
+        rel = PrologInterpreter.Relation(head, *arguments)
+        #print(rel)
+        return rel
     def body(self,kids):
-        head, *k =kids
-        return (head, *k)
-    def fact(self, kids):
+        #print(f"body{kids}")
         return kids[0]
-    def clause(self,kids):
+    def fact(self, kids):
+        return PrologInterpreter.Clause(kids[0])
+    def condition(self, kids):
         head, *body = kids
-        return PrologInterpreter.Clause(head, *body)
+        #print("     ", head, *body)
+        return PrologInterpreter.Clause(head, body, isRestAsArray=True)
+    def clause(self,kids):
+        #print(kids[0])
+        return kids[0]
     def lines(self,kids):
         return kids  # this is a database
 
@@ -96,20 +106,21 @@ class QueryTransformer(Transformer):
         return kids[0]
     def relation(self, kids):
         head, *arguments = kids
-        return PrologInterpreter.Relation(head, *arguments)
+        rel = PrologInterpreter.Relation(head, *arguments, isListOfArgs=None)
+        return rel
     def query(self,kids):
         resultBindings = PrologInterpreter.prove(db, kids[0])
         return resultBindings
 
 
 databaseLines = '''
-fact.
-rule(X) :- requirement.
-ruleB(X,Y) :- rule(X), rule(Y).
-requirement.
+dry(sand).
+dry(X) :- stage2(X).
+no_water(cardboard_box).
+stage2(Z) :- no_water(Z).
 '''
 queryLines = '''
-?ruleB(A,B).
+?dry(cardboard_box).
 '''
 if __name__ == '__main__':
   main()
