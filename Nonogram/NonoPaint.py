@@ -80,6 +80,10 @@ def keyhandler(keys, m):
         m.keyState = 3
     if keys[pygame.K_p]: # print painted board
         print(f"board:{m.userBoard}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+    if keys[pygame.K_r]:
+        m.hiddenBoard = [[0 for i in range(10)] for i in range(5)]
+        m.userBoard = [[0 for i in m.hiddenBoard[0]] for j in m.hiddenBoard]
+        updateHints(m)
 
 def mousehandler(m):
     boundingGrid = ((xOffset, yOffset), (xOffset+boxW*len(m.userBoard[0]), yOffset+boxH*len(m.userBoard)))

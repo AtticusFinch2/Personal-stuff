@@ -33,6 +33,7 @@ class ModelData:
         self.hiddenBoard = hiddenBoard
         self.hbTransposed = NonoLogic.transpose(hiddenBoard)
         self.userBoard = [[99 for i in self.hiddenBoard[0]] for j in self.hiddenBoard]
+        self.ubTransposed = NonoLogic.transpose(self.userBoard)
         self.leftHints = [NonoLogic.row_to_hint(row) for row in self.hiddenBoard]  # (len, type)
         self.topHints = [NonoLogic.row_to_hint(row) for row in self.hbTransposed]  # (len, type)
         self.keyState = 1
@@ -67,6 +68,7 @@ def main():
         drawhandler(model)
         mousehandler(model)
 
+
         pygame.display.flip()
 
     pygame.quit()
@@ -82,6 +84,8 @@ def keyhandler(keys, m):
         m.keyState = 3
     if keys[pygame.K_p]: # print painted board
         print(f"board:{NonoLogic.transpose(m.userBoard)}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+    if keys[pygame.K_g]:
+        m.keyState = 99
 
 def mousehandler(m):
     boundingGrid = ((xOffset, yOffset), (xOffset+boxW*len(m.userBoard[0]), yOffset+boxH*len(m.userBoard)))
@@ -109,7 +113,8 @@ def mousehandler(m):
             m.lastClick = m.curTime
             # user has clicked
             m.userBoard[row][col] = m.keyState
-            drawLeftHintSolved(row, m)
+            m.ubTransposed = NonoLogic.transpose(m.userBoard)
+
 
 stateColor = { # color from value
     1: pygame.Color(50, 50, 50),
@@ -151,8 +156,8 @@ def drawHintLeft(hint, row, model):
 
 
 def drawLeftHintSolved(row, m):
-    rect = pygame.Rect((xOffset - hintKerning, yOffset + (boxH) * row),
-                       (hintKerning, boxH))
+    rect = pygame.Rect((xOffset - hintKerning, yOffset + boxH * row),
+                       (hintKerning, boxH+borderW))
     pygame.draw.rect(
         m.screen,
         pygame.Color(0,255,0) if NonoLogic.checkRowSolved(m.userBoard[row], m.leftHints[row]) else pygame.Color(255,0,0),
@@ -178,6 +183,17 @@ def drawHintTop(hint, col, model):
         model.screen.blit(text, textPos)
 
 
+def drawTopHintSolved(row, m):
+    rect = pygame.Rect((xOffset + boxW * row, yOffset - hintKerning),
+                       (boxW+borderW, hintKerning))
+    pygame.draw.rect(
+        m.screen,
+        pygame.Color(0,255,0) if NonoLogic.checkRowSolved(m.ubTransposed[row], m.topHints[row]) else pygame.Color(255,0,0),
+        rect,
+        # width=borderW,
+    )
+
+
 def drawhandler(m):
     # draw current board
     for gridRow in range(len(m.userBoard)):
@@ -194,6 +210,7 @@ def drawhandler(m):
     for row in range(len(m.leftHints)):
         hint = m.leftHints[row]
         drawHintLeft(hint, row, m)
+        drawLeftHintSolved(row, m)
     # draw hints
     #    top side
     longestHint = max([len(hint) for hint in m.topHints])
@@ -205,7 +222,8 @@ def drawhandler(m):
     )
     for row in range(len(m.topHints)):
         hint = m.topHints[row]
-        drawHintTop(hint, row, m)  # '''
+        drawHintTop(hint, row, m)
+        drawTopHintSolved(row, m)# '''
 
 
 
