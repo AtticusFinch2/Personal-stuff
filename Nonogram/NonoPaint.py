@@ -78,7 +78,7 @@ def keyhandler(keys, m):
         m.keyState = 2
     if keys[pygame.K_3]:
         m.keyState = 3
-    if keys[pygame.K_p]: # print painted board
+    if keys[pygame.K_p]:  # print painted board
         print(f"board:{m.userBoard}, \nlefthints: {m.leftHints} tophints {m.topHints}")
     if keys[pygame.K_r]:
         m.hiddenBoard = [[0 for i in range(10)] for i in range(5)]

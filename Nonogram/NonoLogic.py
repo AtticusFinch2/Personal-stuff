@@ -1,4 +1,4 @@
-
+import copy
 
 # a board is stored as an int[rows][cols]
 # hints are a list of lists of [num, type]
@@ -44,8 +44,59 @@ def checkRowSolved(row, hint):
     row = [(0 if i==99 else i) for i in row]
     return hint == row_to_hint(row)
 
+def expand(rowLength, hintk):
+    hintj = copy.deepcopy(hintk)
+    hintj.reverse()
+    return expandinner(rowLength, hintj)
+def expandinner(rowLength, hintj, i=None, row=None):
+    hint = copy.deepcopy(hintj)
+    row = [99 for _ in range(rowLength)] if row is None else copy.deepcopy(row)
+    i = 0 if i is None else i
+    print(row, hint, i)
+    if i < rowLength:
+        if len(hint)<=0:  # the rest of the row has to be 0
+            row[i] = 0
+            return expandinner(rowLength, hint, i=i+1, row=row)
+        else:
+            row[i] = 0
+            zeroBranch = expandinner(rowLength, hint, i=i+1, row=row)  # branch if current box is 0
+            if hint[0][0] <= rowLength-i:
+                for i2 in range(hint[0][0]):  # if we have a hint, make all boxes in the range of the hint its value
+                    index = i + i2
+                    row[index] = hint[0][1]
+                if rowLength - index >= 2 and len(hint) >= 2:  # if we have space and out next hint is the same type,
+                    if hint[1][1] == hint[0][1]:
+                        index += 1
+                        row[index] = 0  # put white space
+                hint.pop(0)  # we have used the firstmost hint
+                valueBranch = expandinner(rowLength, hint, i=index+1, row=row)  # branch if current box is topmost hint
+                return zeroBranch+valueBranch
+            return zeroBranch
+    # if code reaches this point, we are at a leaf.
+    # now we need to determine whether the leaf is valid under the original hints
+    if len(hint) > 0:  # we could replace this with if hint: but i wanted to make my code more readable
+        return []  # we are using this value as our return for no valid solutions, since it will just get added above.
+    return [row]
+
+
+def collapse(possibilities):
+    ans = []
+    for i in range(len(possibilities[0])):
+        current = possibilities[0][i]
+        s = 0
+        for j in range(len(possibilities)):
+            s += possibilities[j][i]
+        if s == current * len(possibilities):
+            ans.append((i, current)) #index, type
+    return ans
+
+
 
 if __name__ == '__main__':
-  hint = row_to_hint([0,0,1,1,0,1,2,2,1,0])
-  print(checkRowSolved([0,0,1,1,0,1,2,2,1,0], hint))
-  print(transpose([[1 for i in range(10)] for i in range(5)]))
+  hint = row_to_hint([0,1,1,1,0])
+  #print(checkRowSolved([0,0,1,1,0,1,2,2,1,0], hint))
+  #print(transpose([[1 for i in range(10)] for i in range(5)]))
+  print(hint)
+  r = expand(4, hint)
+  print(r)
+  print(collapse(r))
