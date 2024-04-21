@@ -15,9 +15,8 @@ xOffset = xScene//2
 yOffset = yScene//2
 hintKerning = 10
 
-# PUT YOUR NONOGRAM W AND H HERE
-nonoW = 5
-nonoH = 5
+#PUT THE BOARD YOU WANT TO SOLVE HERE:
+hbInit = [[0, 2, 0, 0, 2], [2, 0, 0, 0, 0], [0, 2, 0, 0, 2], [2, 2, 2, 2, 2], [0, 0, 0, 0, 0]]
 
 
 class ModelData:
@@ -25,6 +24,7 @@ class ModelData:
         self,
         running=True,
         screen=pygame.display.set_mode((xScene, yScene)),
+        hiddenBoard=[[0,0,0],[0,0,0]]
     ):
         self.running = running
         self.x = -10
@@ -33,17 +33,19 @@ class ModelData:
         self.click = False
         self.lastClick = 0
         self.curTime = 0
-        self.hiddenBoard = [[0 for i in range(nonoW)] for i in range(nonoH)]
-        self.userBoard = [[0 for i in self.hiddenBoard[0]] for j in self.hiddenBoard]
+        self.hiddenBoard = hiddenBoard
+        self.hbTransposed = NonoLogic.transpose(hiddenBoard)
+        self.userBoard = [[99 for i in self.hiddenBoard[0]] for j in self.hiddenBoard]
+        self.ubTransposed = NonoLogic.transpose(self.userBoard)
         self.leftHints = [NonoLogic.row_to_hint(row) for row in self.hiddenBoard]  # (len, type)
-        self.topHints = [NonoLogic.row_to_hint(row) for row in NonoLogic.transpose(self.hiddenBoard)]  # (len, type)
+        self.topHints = [NonoLogic.row_to_hint(row) for row in self.hbTransposed]  # (len, type)
         self.keyState = 1
 
 
 
 def main():
     pygame.init()
-    model = ModelData()
+    model = ModelData(hiddenBoard=hbInit)
 
     running = True
     global fontsmall
@@ -69,6 +71,7 @@ def main():
         drawhandler(model)
         mousehandler(model)
 
+
         pygame.display.flip()
 
     pygame.quit()
@@ -82,12 +85,15 @@ def keyhandler(keys, m):
         m.keyState = 2
     if keys[pygame.K_3]:
         m.keyState = 3
-    if keys[pygame.K_p]:  # print painted board
-        print(f"board:{m.userBoard}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+    if keys[pygame.K_p]: # print painted board
+        print(f"board:{NonoLogic.transpose(m.userBoard)}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+    if keys[pygame.K_s]:
+        solve(m)
     if keys[pygame.K_r]:
-        m.hiddenBoard = [[0 for i in range(nonoW)] for i in range(nonoH)]
-        m.userBoard = [[0 for i in m.hiddenBoard[0]] for j in m.hiddenBoard]
-        updateHints(m)
+        m.userBoard = [[99 for i in m.hiddenBoard[0]] for j in m.hiddenBoard]
+        m.ubTransposed = NonoLogic.transpose(m.userBoard)
+    if keys[pygame.K_g]:
+        m.keyState = 99
 
 def mousehandler(m):
     boundingGrid = ((xOffset, yOffset), (xOffset+boxW*len(m.userBoard[0]), yOffset+boxH*len(m.userBoard)))
@@ -115,7 +121,7 @@ def mousehandler(m):
             m.lastClick = m.curTime
             # user has clicked
             m.userBoard[row][col] = m.keyState
-            updateHints(m)
+            m.ubTransposed = NonoLogic.transpose(m.userBoard)
 
 
 stateColor = { # color from value
@@ -123,6 +129,7 @@ stateColor = { # color from value
     3: pygame.Color(0, 100, 0),
     2: pygame.Color(0, 0, 0),
     0: pygame.Color(255, 255, 255),
+    99: pygame.Color(100,100,100)
 }
 whiteTextStates = {2}
 def drawSquare(row, col, model):
@@ -156,6 +163,17 @@ def drawHintLeft(hint, row, model):
         model.screen.blit(text, textPos)
 
 
+def drawLeftHintSolved(row, m):
+    rect = pygame.Rect((xOffset - hintKerning, yOffset + boxH * row),
+                       (hintKerning, boxH+borderW))
+    pygame.draw.rect(
+        m.screen,
+        pygame.Color(0,255,0) if NonoLogic.checkRowSolved(m.userBoard[row], m.leftHints[row]) else pygame.Color(255,0,0),
+        rect,
+        # width=borderW,
+    )
+
+
 def drawHintTop(hint, col, model):
 
     for i in range(len(hint)):
@@ -171,6 +189,17 @@ def drawHintTop(hint, col, model):
         )
         textPos = rect
         model.screen.blit(text, textPos)
+
+
+def drawTopHintSolved(row, m):
+    rect = pygame.Rect((xOffset + boxW * row, yOffset - hintKerning),
+                       (boxW+borderW, hintKerning))
+    pygame.draw.rect(
+        m.screen,
+        pygame.Color(0,255,0) if NonoLogic.checkRowSolved(m.ubTransposed[row], m.topHints[row]) else pygame.Color(255,0,0),
+        rect,
+        # width=borderW,
+    )
 
 
 def drawhandler(m):
@@ -189,6 +218,7 @@ def drawhandler(m):
     for row in range(len(m.leftHints)):
         hint = m.leftHints[row]
         drawHintLeft(hint, row, m)
+        drawLeftHintSolved(row, m)
     # draw hints
     #    top side
     longestHint = max([len(hint) for hint in m.topHints])
@@ -200,12 +230,22 @@ def drawhandler(m):
     )
     for row in range(len(m.topHints)):
         hint = m.topHints[row]
-        drawHintTop(hint, row, m)  # '''
+        drawHintTop(hint, row, m)
+        drawTopHintSolved(row, m)# '''
 
-
-def updateHints(m):
-    m.leftHints = [NonoLogic.row_to_hint(row) for row in m.userBoard]  # (len, type)
-    m.topHints = [NonoLogic.row_to_hint(row) for row in NonoLogic.transpose(m.userBoard)]  # (len, type)
+def solve(model):
+    width = len(model.topHints)
+    height = len(model.leftHints)
+    bindings_left = NonoLogic.getAllRequiredLeft(height,width,model.userBoard,model.leftHints)
+    bindings_top = NonoLogic.getAllRequiredTop(height,width,model.userBoard,model.topHints)
+    #print(bindings_top, bindings_left)
+    for y in range(height):
+        for key in bindings_left[y]:
+            model.userBoard[y][key] = bindings_left[y][key]
+    for x in range(width):
+        for key in bindings_top[x]:
+            model.userBoard[key][x] = bindings_top[x][key]
+    model.ubTransposed = NonoLogic.transpose(model.userBoard)
 
 
 if __name__ == '__main__':

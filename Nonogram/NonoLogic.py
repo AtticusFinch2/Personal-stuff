@@ -52,7 +52,7 @@ def expandinner(rowLength, hintj, i=None, row=None):
     hint = copy.deepcopy(hintj)
     row = [99 for _ in range(rowLength)] if row is None else copy.deepcopy(row)
     i = 0 if i is None else i
-    print(row, hint, i)
+    #print(row, hint, i)
     if i < rowLength:
         if len(hint)<=0:  # the rest of the row has to be 0
             row[i] = 0
@@ -80,23 +80,56 @@ def expandinner(rowLength, hintj, i=None, row=None):
 
 
 def collapse(possibilities):
-    ans = []
+    if possibilities == []:
+        return {}
+    ans = {}
     for i in range(len(possibilities[0])):
         current = possibilities[0][i]
         s = 0
         for j in range(len(possibilities)):
             s += possibilities[j][i]
         if s == current * len(possibilities):
-            ans.append((i, current)) #index, type
+            ans[i] = current  # index : type
     return ans
+
+
+def refine(bindings, possibilities):
+    if bindings == {}:
+        return possibilities
+    ans = []
+    for possibility in possibilities:
+        valid = True
+        for key in bindings:
+            if possibility[key] != bindings[key]:
+                valid = False
+        if valid:
+            ans.append(possibility)
+    return ans
+
+
+def getAllRequiredLeft(h, w, oldboard, hints):
+    bindings_left = []
+    for y in range(h):
+        binding = {x: oldboard[y][x] for x in range(w) if oldboard[y][x] != 99}
+        #print(f"input:{[oldboard[y][x] for x in range(w)]} \nbindings: {binding}")
+        #print(f"the thing {refine(binding, expand(w, hints[y]))}")
+        bindings_left.append(collapse(refine(binding, expand(w, hints[y]))))
+    return bindings_left
+
+
+def getAllRequiredTop(h, w, oldboard, hints):
+    bindings_top = []
+    for x in range(w):
+        binding = {y: oldboard[y][x] for y in range(h) if oldboard[y][x] != 99}
+        bindings_top.append(collapse(refine(binding, expand(h, hints[x]))))
+    return bindings_top
 
 
 
 if __name__ == '__main__':
-  hint = row_to_hint([0,1,1,1,0])
-  #print(checkRowSolved([0,0,1,1,0,1,2,2,1,0], hint))
-  #print(transpose([[1 for i in range(10)] for i in range(5)]))
-  print(hint)
-  r = expand(4, hint)
-  print(r)
-  print(collapse(r))
+    hint = row_to_hint([0,1,1,1,0])
+    print(hint)
+    r = expand(5, hint)
+    print(r)
+    print(refine({1:1},r))
+    print(collapse(r))
