@@ -15,8 +15,12 @@ xOffset = xScene//2
 yOffset = yScene//2
 hintKerning = 10
 
-#PUT THE BOARD YOU WANT TO SOLVE HERE:
-hbInit = [[0, 2, 0, 0, 2], [2, 0, 0, 0, 0], [0, 2, 0, 0, 2], [2, 2, 2, 2, 2], [0, 0, 0, 0, 0]]
+# PUT THE BOARD YOU WANT TO SOLVE HERE:
+import json
+fileName = "NonoPuzzles/name1.json"
+with open(fileName, 'r') as f:
+    hbInit = json.load(f)
+#hbInit = [[0, 0, 0, 2, 0, 2, 0, 0, 0, 0], [0, 3, 0, 0, 0, 3, 0, 2, 2, 3], [0, 0, 3, 0, 0, 0, 3, 2, 2, 2], [2, 2, 0, 0, 0, 3, 2, 0, 0, 2], [0, 2, 2, 2, 0, 2, 0, 0, 2, 2]]
 
 
 class ModelData:
@@ -85,7 +89,7 @@ def keyhandler(keys, m):
         m.keyState = 2
     if keys[pygame.K_3]:
         m.keyState = 3
-    if keys[pygame.K_p]: # print painted board
+    if keys[pygame.K_p]:  # print painted board
         print(f"board:{NonoLogic.transpose(m.userBoard)}, \nlefthints: {m.leftHints} tophints {m.topHints}")
     if keys[pygame.K_s]:
         solve(m)

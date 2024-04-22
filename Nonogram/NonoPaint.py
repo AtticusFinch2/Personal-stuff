@@ -2,6 +2,7 @@ import pygame
 from dataclasses import dataclass, field
 import NonoLogic
 from collections import defaultdict
+import json
 
 # window setup
 xScene = 1200
@@ -16,7 +17,7 @@ yOffset = yScene//2
 hintKerning = 10
 
 # PUT YOUR NONOGRAM W AND H HERE
-nonoW = 5
+nonoW = 10
 nonoH = 5
 
 
@@ -84,6 +85,13 @@ def keyhandler(keys, m):
         m.keyState = 3
     if keys[pygame.K_p]:  # print painted board
         print(f"board:{m.userBoard}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+        filename = input("What do you want to save this board as: ")
+        if not filename.endswith('.json'):
+            filename += '.json'
+        filename = "NonoPuzzles/" + filename
+        with open(filename, 'w') as f:
+            json.dump(m.userBoard, f)
+        print(f"Data has been written to {filename}")
     if keys[pygame.K_r]:
         m.hiddenBoard = [[0 for i in range(nonoW)] for i in range(nonoH)]
         m.userBoard = [[0 for i in m.hiddenBoard[0]] for j in m.hiddenBoard]
