@@ -1,5 +1,6 @@
 import pygame
 from dataclasses import dataclass, field
+import copy
 import NonoLogic
 from collections import defaultdict
 
@@ -15,12 +16,20 @@ xOffset = xScene//2
 yOffset = yScene//2
 hintKerning = 10
 
-# PUT THE BOARD YOU WANT TO SOLVE HERE:
+
 import json
-fileName = "NonoPuzzles/name1.json"
+
+# PUT THE BOARD YOU WANT TO SOLVE HERE:
+fileName = "shipBoi"
+
+fileName = "NonoPuzzles/" + fileName + ".json"
 with open(fileName, 'r') as f:
     hbInit = json.load(f)
-#hbInit = [[0, 0, 0, 2, 0, 2, 0, 0, 0, 0], [0, 3, 0, 0, 0, 3, 0, 2, 2, 3], [0, 0, 3, 0, 0, 0, 3, 2, 2, 2], [2, 2, 0, 0, 0, 3, 2, 0, 0, 2], [0, 2, 2, 2, 0, 2, 0, 0, 2, 2]]
+
+# USE EXHAUSTIVE SEARCH WHEN YOU GET STUCK?
+EXHAUST_SOLVE_ON = True
+
+
 
 
 class ModelData:
@@ -28,7 +37,7 @@ class ModelData:
         self,
         running=True,
         screen=pygame.display.set_mode((xScene, yScene)),
-        hiddenBoard=[[0,0,0],[0,0,0]]
+        hiddenBoard=hbInit
     ):
         self.running = running
         self.x = -10
@@ -49,7 +58,7 @@ class ModelData:
 
 def main():
     pygame.init()
-    model = ModelData(hiddenBoard=hbInit)
+    model = ModelData()
 
     running = True
     global fontsmall
@@ -90,7 +99,7 @@ def keyhandler(keys, m):
     if keys[pygame.K_3]:
         m.keyState = 3
     if keys[pygame.K_p]:  # print painted board
-        print(f"board:{NonoLogic.transpose(m.userBoard)}, \nlefthints: {m.leftHints} tophints {m.topHints}")
+        print(f"board: \n{m.userBoard} \nlefthints: \n{m.leftHints}\ntophints: \n{m.topHints}")
     if keys[pygame.K_s]:
         solve(m)
     if keys[pygame.K_r]:
@@ -238,6 +247,7 @@ def drawhandler(m):
         drawTopHintSolved(row, m)# '''
 
 def solve(model):
+    old_board = copy.deepcopy(model.userBoard)
     width = len(model.topHints)
     height = len(model.leftHints)
     bindings_left = NonoLogic.getAllRequiredLeft(height,width,model.userBoard,model.leftHints)
@@ -249,6 +259,14 @@ def solve(model):
     for x in range(width):
         for key in bindings_top[x]:
             model.userBoard[key][x] = bindings_top[x][key]
+    if old_board == model.userBoard and EXHAUST_SOLVE_ON:
+        print("\nEXHAUSTIVE SOLVE")
+        solutions = NonoLogic.solveStuck(old_board, model.leftHints, model.topHints)
+        if len(solutions) > 1:
+            print(f"{len(solutions)} correct solutions found")
+        elif len(solutions) == 0:
+            print("NO SOLUTIONS FOUND WITH THE GIVEN BINDINGS\n++++SOMETHING WENT WRONG++++")
+        model.userBoard = solutions[0] if solutions else model.userBoard
     model.ubTransposed = NonoLogic.transpose(model.userBoard)
 
 

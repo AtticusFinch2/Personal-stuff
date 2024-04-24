@@ -18,7 +18,7 @@ hintKerning = 10
 
 # PUT YOUR NONOGRAM W AND H HERE
 nonoW = 10
-nonoH = 5
+nonoH = 8
 
 
 class ModelData:

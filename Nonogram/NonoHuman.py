@@ -1,6 +1,7 @@
 import pygame
 from dataclasses import dataclass, field
 import NonoLogic
+import json
 from collections import defaultdict
 
 # window setup
@@ -15,13 +16,20 @@ xOffset = xScene//2
 yOffset = yScene//2
 hintKerning = 10
 
+# PUT THE BOARD YOU WANT TO SOLVE HERE:
+fileName = "shipBoi"
+
+fileName = "NonoPuzzles/" + fileName + ".json"
+with open(fileName, 'r') as f:
+    hbInit = json.load(f)
+
 
 class ModelData:
     def __init__(
         self,
         running=True,
         screen=pygame.display.set_mode((xScene, yScene)),
-        hiddenBoard=[[0,0,0],[0,0,0]]
+        hiddenBoard=hbInit
     ):
         self.running = running
         self.x = -10
@@ -42,7 +50,7 @@ class ModelData:
 
 def main():
     pygame.init()
-    model = ModelData(hiddenBoard=[[0, 0, 0, 2, 0, 0, 2, 0, 0, 0], [0, 0, 0, 2, 0, 0, 2, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 2, 0, 0, 0, 0, 2, 0, 0], [0, 0, 2, 2, 2, 2, 2, 2, 0, 0]])
+    model = ModelData()
 
     running = True
     global fontsmall
