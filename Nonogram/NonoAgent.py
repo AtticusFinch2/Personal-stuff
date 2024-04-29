@@ -2,11 +2,12 @@ import pygame
 from dataclasses import dataclass, field
 import copy
 import NonoLogic
+import time
 from collections import defaultdict
 
 # window setup
-xScene = 1200
-yScene = 800
+xScene = 1080
+yScene = 720
 framerate = 60
 boxW = 40
 boxH = 40
@@ -28,8 +29,6 @@ with open(fileName, 'r') as f:
 
 # USE EXHAUSTIVE SEARCH WHEN YOU GET STUCK?
 EXHAUST_SOLVE_ON = True
-
-
 
 
 class ModelData:
@@ -261,12 +260,16 @@ def solve(model):
             model.userBoard[key][x] = bindings_top[x][key]
     if old_board == model.userBoard and EXHAUST_SOLVE_ON:
         print("\nEXHAUSTIVE SOLVE")
+        starttime = time.time()
         solutions = NonoLogic.solveStuck(old_board, model.leftHints, model.topHints)
-        if len(solutions) > 1:
-            print(f"{len(solutions)} correct solutions found")
-        elif len(solutions) == 0:
-            print("NO SOLUTIONS FOUND WITH THE GIVEN BINDINGS\n++++SOMETHING WENT WRONG++++")
-        model.userBoard = solutions[0] if solutions else model.userBoard
+        endtime = time.time()
+        runtime = endtime - starttime
+        print(f'"TIMETAKEN",{runtime}')
+        #if len(solutions) > 1:
+            #print(f"{len(solutions)} correct solutions found")
+        #elif len(solutions) == 0:
+            #print("NO SOLUTIONS FOUND WITH THE GIVEN BINDINGS\n++++SOMETHING WENT WRONG++++")
+        model.userBoard = solutions if solutions else model.userBoard
     model.ubTransposed = NonoLogic.transpose(model.userBoard)
 
 

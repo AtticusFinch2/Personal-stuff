@@ -48,31 +48,43 @@ def checkRowSolved(row, hint):
 def expand(rowLength, hintk):
     hintj = copy.deepcopy(hintk)
     hintj.reverse()
-    return expandinner(rowLength, hintj)
+    return expandinner(rowLength, hintj, {})
+def expandBindings(rowLength, hintk, bindings):
+    hintj = copy.deepcopy(hintk)
+    hintj.reverse()
+    return expandinner(rowLength, hintj, bindings)
 
 
-def expandinner(rowLength, hintj, i=None, row=None):
+def expandinner(rowLength, hintj, bindings, i=None, row=None):
     hint = copy.deepcopy(hintj)
     row = [99 for _ in range(rowLength)] if row is None else copy.deepcopy(row)
     i = 0 if i is None else i
-    #print(row, hint, i)
     if i < rowLength:
         if len(hint)<=0:  # the rest of the row has to be 0
             row[i] = 0
-            return expandinner(rowLength, hint, i=i+1, row=row)
+            if i in bindings and bindings[i] != 0:
+                return []
+            return expandinner(rowLength, hint, bindings, i=i+1, row=row)
         else:
             row[i] = 0
-            zeroBranch = expandinner(rowLength, hint, i=i+1, row=row)  # branch if current box is 0
+            if i in bindings and bindings[i] != 0:
+                zeroBranch = []
+            else:
+                zeroBranch = expandinner(rowLength, hint, bindings, i=i+1, row=row)  # branch if current box is 0
             if hint[0][0] <= rowLength-i:
                 for i2 in range(hint[0][0]):  # if we have a hint, make all boxes in the range of the hint its value
                     index = i + i2
+                    if index in bindings and bindings[index] != hint[0][1]:
+                        return zeroBranch
                     row[index] = hint[0][1]
                 if rowLength - index >= 2 and len(hint) >= 2:  # if we have space and our next hint is the same type,
                     if hint[1][1] == hint[0][1]:
                         index += 1
+                        if index in bindings and bindings[index] != 0:
+                            return zeroBranch
                         row[index] = 0  # put white space
                 hint.pop(0)  # we have used the firstmost hint
-                valueBranch = expandinner(rowLength, hint, i=index+1, row=row)  # branch if current box is topmost hint
+                valueBranch = expandinner(rowLength, hint, bindings, i=index+1, row=row)  # branch if current box is topmost hint
                 return zeroBranch+valueBranch
             return zeroBranch
     # if code reaches this point, we are at a leaf.
@@ -117,7 +129,7 @@ def getAllRequiredLeft(h, w, oldboard, hints):
         binding = {x: oldboard[y][x] for x in range(w) if oldboard[y][x] != 99}
         #print(f"input:{[oldboard[y][x] for x in range(w)]} \nbindings: {binding}")
         #print(f"the thing {refine(binding, expand(w, hints[y]))}")
-        bindings_left.append(collapse(refine(binding, expand(w, hints[y]))))
+        bindings_left.append(collapse(expandBindings(w, hints[y], binding)))
     return bindings_left
 
 
@@ -125,7 +137,7 @@ def getAllRequiredTop(h, w, oldboard, hints):
     bindings_top = []
     for x in range(w):
         binding = {y: oldboard[y][x] for y in range(h) if oldboard[y][x] != 99}
-        bindings_top.append(collapse(refine(binding, expand(h, hints[x]))))
+        bindings_top.append(collapse(expandBindings(h, hints[x], binding)))
     return bindings_top
 
 
@@ -160,36 +172,38 @@ def solveStuck_inner(stuckRow, stuckCol, oldboard, lefthints, tophints):
         current_hints = lefthints[current]
         binding = {x: oldboard[current][x] for x in range(w) if oldboard[current][x] != 99}
         #print(binding, current_hints)
-        permutations = refine(binding, expand(w, current_hints))
+        permutations = expandBindings(w, current_hints, binding)
         #print(permutations, current, "ROW")
-        ans = []
         board = copy.deepcopy(oldboard)
         for branch in permutations:
             board[current] = branch
             newSR = copy.deepcopy(stuckRow)
             newSC = copy.deepcopy(stuckCol)
-            ans = ans + solveStuck_inner(newSR, newSC, board, lefthints, tophints)
-        return ans
+            newANS = solveStuck_inner(newSR, newSC, board, lefthints, tophints)
+            if newANS:
+                return newANS
+        return None
     elif stuckCol:
         current = stuckCol.pop()
         current_hints = tophints[current]
         binding = {y: oldboard[y][current] for y in range(h) if oldboard[y][current] != 99}
-        permutations = refine(binding, expand(h, current_hints))
+        permutations = expandBindings(h, current_hints, binding)
         #print(permutations, binding, current, "COL")
-        ans = []
         board = copy.deepcopy(oldboard)
         for branch in permutations:
             for y in range(h):
                 board[y][current] = branch[y]
             newSR = copy.deepcopy(stuckRow)
             newSC = copy.deepcopy(stuckCol)
-            ans = ans + solveStuck_inner(newSR, newSC, board, lefthints, tophints)
-        return ans
+            newANS = solveStuck_inner(newSR, newSC, board, lefthints, tophints)
+            if newANS:
+                return newANS
+        return None
     else:
         #print(check(oldboard, lefthints, tophints, transpose(oldboard)), oldboard)
         if check(oldboard, lefthints, tophints, transpose(oldboard)):
-            return [oldboard]
-        return []
+            return oldboard
+        return None
 
 
 def stuckTestCase():
@@ -201,7 +215,7 @@ def stuckTestCase():
     #print(sr,sc)
     ans = solveStuck_inner(sr, sc, board, lefthints, tophints)
     print(ans)
-    print(f"correct? {ans[0] == correctboard}")
+    print(f"correct? {ans == correctboard}")
 
 
 if __name__ == '__main__':
@@ -211,4 +225,4 @@ if __name__ == '__main__':
     print(r)
     #print(refine({1:1},r))
     print(collapse(r))
-    #stuckTestCase()
+    stuckTestCase()

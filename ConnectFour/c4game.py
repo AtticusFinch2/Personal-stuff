@@ -76,7 +76,7 @@ def main():
 
         drawHandler(model)
         drawWinner(model)
-        watermark(model)
+        #watermark(model)
         # flip() the display to put your work on screen
         pygame.display.flip()
         if ticker >= 0 and model.player == 2:  # increase to slow it down, change the == statement to change who plays
