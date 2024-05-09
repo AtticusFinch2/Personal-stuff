@@ -21,7 +21,7 @@ hintKerning = 10
 import json
 
 # PUT THE BOARD YOU WANT TO SOLVE HERE:
-fileName = "shipBoi"
+fileName = "smiley2"
 
 fileName = "NonoPuzzles/" + fileName + ".json"
 with open(fileName, 'r') as f:
@@ -264,7 +264,7 @@ def solve(model):
         solutions = NonoLogic.solveStuck(old_board, model.leftHints, model.topHints)
         endtime = time.time()
         runtime = endtime - starttime
-        print(f'"TIMETAKEN",{runtime}')
+        print(f'TIMETAKEN{runtime}')
         #if len(solutions) > 1:
             #print(f"{len(solutions)} correct solutions found")
         #elif len(solutions) == 0:
